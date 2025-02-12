@@ -1,0 +1,18 @@
+# Roblox Studio build files
+*.rbxlx
+*.rbxl
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Rojo sourcemap files
+*sourcemap.json
+
+# Wally package files
+/Packages
+/ServerPackages
+/DevPackages
+
+# Luau LSP type definitions for Roblox
+globalTypes.d.luau

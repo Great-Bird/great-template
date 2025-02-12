@@ -1,0 +1,7 @@
+{
+    "languageMode": "strict",
+    "aliases": {
+        "Packages": "Packages",
+        "lune": "~/.lune/.typedefs/0.8.9/"
+    }
+}
