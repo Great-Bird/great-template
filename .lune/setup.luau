@@ -1,6 +1,9 @@
 --[[
-	Setup Script v0.1.0
+	Setup Script v0.1.1
 	Author: Great_Bird
+	Date: 2024-09-23
+	Last edited: 2025-02-12
+
 	Run `lune run setup help` for usage instructions.
 
 	Script which sets up the development environment for the project.
@@ -10,6 +13,10 @@
 	
 	This script is very project-specific, so you may need to modify it to fit your project's needs.
 	Constant variables are provided for easy configuration.
+
+	Changelog:
+	v0.1.0 (2025-02-12)
+	- Release
 ]]
 
 local fs = require("@lune/fs")
@@ -38,17 +45,15 @@ local ProcessUtil = require("process-util")
 
 DevSetupTasks.fetchTypeDefinitions()
 DevSetupTasks.installPackages()
-if not fs.isDir("Packages") then
-	fs.writeDir("Packages")
-end
-if not fs.isDir("ServerPackages") then
-	fs.writeDir("ServerPackages")
-end
-if not fs.isDir("DevPackages") then
-	fs.writeDir("DevPackages")
-end
-if table.find(process.args, "import") or not fs.isFile(Config.buildFilePath) then
+DevSetupTasks.createMissingPackageDirectories()
+DevSetupTasks.createSourcemap()
+DevSetupTasks.reexportPackageTypes()
+if table.find(process.args, "import") then
 	DevSetupTasks.fetchPlace()
+else
+	if not fs.isFile(Config.buildFilePath) then
+		print(`{s("bold")}{c("yellow")}Warning: {c("reset")}{s("reset")} The build file does not exist. It's recommended to run with the 'import' flag to ensure the latest version of the main place is imported.`)
+	end
 end
 ProcessUtil.printAllCompleted()
 

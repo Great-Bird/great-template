@@ -1,6 +1,9 @@
 --[[
-	Analyze Script v0.1.0
+	Analyze Script v0.1.1
 	Author: Great_Bird
+	Date: 2024-09-23
+	Last edited: 2025-02-12
+
 	Run `lune run analyze help` for usage instructions.
 
 	Script which runs the luau-lsp analyze command. Displays all type errors and warnings in the console.
@@ -11,6 +14,13 @@
 	
 	This script is very project-specific, so you may need to modify it to fit your project's needs.
 	Constant variables are provided for easy configuration.
+
+	Changelog:
+	v0.1.1 (2025-02-12)
+	- Updated to use Config module
+	- Added file information
+	v0.1.0 (2024-09-23)
+	- Release
 ]]
 
 local process = require("@lune/process")

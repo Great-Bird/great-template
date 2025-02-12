@@ -40,7 +40,24 @@ end
 
 function module.installPackages()
 	ProcessUtil.spawnProcess("wally", { "install" }, nil, "Installed packages", "Failed to install packages")
+end
 
+function module.createMissingPackageDirectories()
+	if not fs.isDir("Packages") then
+		fs.writeDir("Packages")
+		ProcessUtil.printTaskCompleted("Added Packages folder")
+	end
+	if not fs.isDir("ServerPackages") then
+		fs.writeDir("ServerPackages")
+		ProcessUtil.printTaskCompleted("Added ServerPackages folder")
+	end
+	if not fs.isDir("DevPackages") then
+		fs.writeDir("DevPackages")
+		ProcessUtil.printTaskCompleted("Added DevPackages folder")
+	end
+end
+
+function module.createSourcemap()
 	ProcessUtil.spawnProcess(
 		"rojo",
 		{ "sourcemap", Config.projectFilePath, "--include-non-scripts", "--output", Config.sourcemapFilePath },
@@ -48,7 +65,9 @@ function module.installPackages()
 		"Created sourcemap",
 		"Failed to create sourcemap"
 	)
+end
 
+function module.reexportPackageTypes()
 	ProcessUtil.spawnProcess(
 		"wally-package-types",
 		{ "--sourcemap", Config.sourcemapFilePath, "Packages" },
