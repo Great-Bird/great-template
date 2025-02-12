@@ -38,6 +38,15 @@ local ProcessUtil = require("process-util")
 
 DevSetupTasks.fetchTypeDefinitions()
 DevSetupTasks.installPackages()
+if not fs.isDir("Packages") then
+	fs.writeDir("Packages")
+end
+if not fs.isDir("ServerPackages") then
+	fs.writeDir("ServerPackages")
+end
+if not fs.isDir("DevPackages") then
+	fs.writeDir("DevPackages")
+end
 if table.find(process.args, "import") or not fs.isFile(Config.buildFilePath) then
 	DevSetupTasks.fetchPlace()
 end
