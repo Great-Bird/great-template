@@ -59,6 +59,27 @@ local function topologicalSort<T...>(schedule: Schedule<T...>)
 	visit(schedule, visited, ROOT)
 end
 
+--[=[
+	@param callback The function to call.
+	@param ... The arguments to pass to the function.
+	@return { success: true, yielded: boolean } | { success: false, error: string }	
+
+	Detects if a function yielded when called.
+]=]
+local function callNoYield<A...>(
+	callback: (A...) -> (),
+	...: A...
+): { success: true, yielded: boolean } | { success: false, error: string }
+	local thread = coroutine.create(callback)
+	local success, err = coroutine.resume(thread, ...)
+	local yielded = coroutine.status(thread) == "suspended"
+	coroutine.close(thread) -- Stop the thread from running if it has yielded
+	if not success then
+		return { success = success, error = err }
+	end
+	return { success = success, yielded = yielded }
+end
+
 local Schedule = {}
 
 --[=[
@@ -116,7 +137,7 @@ function Schedule.new<T...>(parameters: {
 	end
 
 	--[=[
-		Executes a schedule's tasks in topological order.
+		Executes the schedule's tasks in topological order.
 
 		```lua
 		schedule.start("Hello, world!")
@@ -129,10 +150,30 @@ function Schedule.new<T...>(parameters: {
 		-- f	Hello, world!
 		```
 	]=]
-	function schedule.start(...: any)
+	function schedule.start(...: T...)
 		for _, job in schedule.jobs do
 			schedule.before(job, ...)
 			job(...)
+			schedule.after(job, ...)
+		end
+	end
+
+	--[=[
+		Runs the schedule, erroring if any function in the schedule yields.
+	]=]
+	function schedule.startNoYield(...: T...)
+		for _, job in schedule.jobs do
+			schedule.before(job, ...)
+
+			local result = callNoYield(job, ...)
+			if not result.success then
+				local scriptName, line = debug.info(job, "sl")
+				error(`Failed to run scheduled function defined in {scriptName}:{line}: {result.error}`)
+			elseif result.yielded then
+				local scriptName, line = debug.info(job, "sl")
+				error(`Failed to run scheduled function defined in {scriptName}:{line}: Job yielded`)
+			end
+
 			schedule.after(job, ...)
 		end
 	end
@@ -173,10 +214,7 @@ function Schedule.parallel<T...>(parameters: {
 		return jobTask
 	end
 
-	--[=[
-		Executes a schedule's tasks in parallel. Yields until all jobs are finished.
-	]=]
-	function schedule.start(...: T...)
+	local function startSchedule(disallowYield: boolean, ...: T...)
 		local unfinishedJobCount = #schedule.jobs
 		local currentThread = coroutine.running()
 		local finishedDependencies: { [Job<T...>]: true } = {}
@@ -201,7 +239,16 @@ function Schedule.parallel<T...>(parameters: {
 			yieldingThreads[jobThread] = nil
 
 			schedule.before(job, ...)
-			job(...)
+
+			local result = callNoYield(job, ...)
+			if not result.success then
+				local scriptName, line = debug.info(job, "sl")
+				error(`Failed to run scheduled function defined in {scriptName}:{line}: {result.error}`)
+			elseif result.yielded then
+				local scriptName, line = debug.info(job, "sl")
+				error(`Failed to run scheduled function defined in {scriptName}:{line}: Job yielded`)
+			end
+
 			schedule.after(job, ...)
 
 			finishedDependencies[job] = true
@@ -220,12 +267,30 @@ function Schedule.parallel<T...>(parameters: {
 		end
 
 		for _, job in schedule.jobs do
-			task.spawn(runJob, job, ...)
+			local coro = coroutine.create(runJob)
+			local success, err = coroutine.resume(coro, job, ...)
+			if not success then
+				error(`Failed to run scheduled function: {err}`)
+			end
 		end
 
 		if unfinishedJobCount > 0 then
 			coroutine.yield()
 		end
+	end
+
+	--[=[
+		Executes the schedule's tasks in parallel. Yields until all jobs are finished.
+	]=]
+	function schedule.start(...: T...)
+		startSchedule(false, ...)
+	end
+
+	--[=[
+		Runs the schedule, erroring if any function in the schedule yields.
+	]=]
+	function schedule.startNoYield(...: T...)
+		startSchedule(true, ...)
 	end
 
 	return schedule
@@ -276,6 +341,7 @@ end
 export type Schedule<T...> = {
 	job: (jobTask: (T...) -> (), ...Job<T...>) -> Job<T...>,
 	start: (T...) -> (),
+	startNoYield: (T...) -> (),
 	before: (job: Job<T...>, T...) -> (),
 	after: (job: Job<T...>, T...) -> (),
 	graph: { [Job<T...>]: { Job<T...> } },
@@ -284,6 +350,7 @@ export type Schedule<T...> = {
 export type ParallelSchedule<T...> = {
 	job: (jobTask: (T...) -> (), ...Job<T...>) -> Job<T...>,
 	start: (T...) -> (),
+	startNoYield: (T...) -> (),
 	before: (job: Job<T...>, T...) -> (),
 	after: (job: Job<T...>, T...) -> (),
 	dependencies: { [Job<T...>]: { Job<T...> } },
