@@ -15,12 +15,8 @@ local module = {
 }
 
 local function setInstances(character: Model, player: Player)
-	local rootPart = character.PrimaryPart
-	assert(
-		rootPart and rootPart.Name == "HumanoidRootPart" and rootPart:IsA("Part"),
-		"Character must have a HumanoidRootPart as its PrimaryPart"
-	)
-
+	local rootPart = character:WaitForChild("HumanoidRootPart")
+	assert(rootPart:IsA("Part"), "Character must have a HumanoidRootPart as its PrimaryPart")
 	local humanoid = character:WaitForChild("Humanoid")
 	assert(humanoid:IsA("Humanoid"), "Character must have a Humanoid")
 	local animator = humanoid:WaitForChild("Animator")

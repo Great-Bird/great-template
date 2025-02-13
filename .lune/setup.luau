@@ -48,15 +48,16 @@ DevSetupTasks.installPackages()
 DevSetupTasks.createMissingPackageDirectories()
 DevSetupTasks.createSourcemap()
 DevSetupTasks.reexportPackageTypes()
-if table.find(process.args, "import") then
+local shouldImport = table.find(process.args, "import")
+if shouldImport then
 	DevSetupTasks.fetchPlace()
-else
-	if not fs.isFile(Config.buildFilePath) then
-		print(`{s("bold")}{c("yellow")}Warning: {c("reset")}{s("reset")} The build file does not exist. It's recommended to run with the 'import' flag to ensure the latest version of the main place is imported.`)
-	end
 end
 ProcessUtil.printAllCompleted()
 
 print(`The development environment has been set up!`)
-print(`Open {Config.projectFilePath} in Roblox Studio and connect with the Rojo plugin to start developing.`)
+if not fs.isFile(Config.buildFilePath) then
+	print(`{s("bold")}{c("yellow")}Warning: {c("reset")}{s("reset")}{Config.buildFilePath} does not exist. It's recommended to run with the 'import' flag to ensure the latest version of the main place is imported.`)
+else
+	print(`Open {Config.buildFilePath} in Roblox Studio and connect with the Rojo plugin to start developing.`)
+end
 DevSetupTasks.serveProject()
