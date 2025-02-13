@@ -78,10 +78,11 @@ file paths according to your preference.
 
 ### Dependencies
 
-You may have a few tools or packages you'd like to use with this project in mind.
+You may have a few tools or packages in mind which you would like to use in this
+project.
 
 #### Tools
-Let's say you want to install [Blink](https://github.com/1Axen/blink), a tool
+Let's say you want to install [Blink](https://github.com/1Axen/blink), a CLI tool
 which automatically generates high-performance Roblox networking code from a file
 describing your RemoteEvents. To do this, you can run
 ```bash
@@ -93,12 +94,12 @@ to use it in your project!
 #### Roblox Packages
 Now let's say you're actually something of a performant network code fanatic, and
 you want to use [Squash](https://data-oriented-house.github.io/Squash/) to compress
-down the data you're sending to your clients even further. To do this, you can add
+down the data you're sending to your clients even further. To do this, you can
+open `wally.toml`, and under the `[dependencies]` section, add
 ```toml
 Squash = "data-oriented-house/squash@VERSION"
 ```
-to the `[dependencies]` section within `wally.toml`, where `VERSION` is the
-latest version of Squash (example: 2.5.0). After running
+where `VERSION` is the latest version of Squash (example: 2.5.0). After running
 ```lua
 lune run install
 ```
@@ -136,9 +137,9 @@ Passing the `import` flag is only necessary if there were changes made in the
 main place which you would like to edit with.
 
 Note: The main place (i.e. the one you specified the place ID of in `config.luau`) holds
-the source copy of the game's DataModel. Changes to instances in a local file
+the source copy of the game's DataModel. Changes to Instances in a local file
 (such as `build.rbxlx`) will not automatically update the main place. If you want
-to make changes to the game's instances, make your changes in the main place, and
+to make changes to the game's Instances, make your changes in the main place, and
 run `lune run setup import` and re-open the build file.
 
 If you're curious about what each part of this project structure does, see
@@ -158,7 +159,7 @@ If you're curious about what each part of this project structure does, see
 ### Recommended VSCode Extensions
 - [Rojo](https://marketplace.visualstudio.com/items?itemName=evaera.vscode-rojo): Extension which makes it easy to sync using Rojo without needing the command line. Also helps manage and automatically update the Roblox Studio plugin for Rojo, which is required for it to work.
 - [Luau LSP](https://marketplace.visualstudio.com/items?itemName=JohnnyMorganz.luau-lsp): Support for the Luau language in VSCode. Makes your life easier with great features like autocomplete, type errors, and more.
-  - Luau LSP comes with a [companion plugin](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion) for Roblox Studio which provides autocomplete for Roblox instances in VSCode. It is recommended to install this. Once installed, make sure to set `luau-lsp.plugin.enabled` to `true` in settings.
+  - Luau LSP comes with a [companion plugin](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion) for Roblox Studio which provides autocomplete for Roblox Instances in VSCode. It is recommended to install this. Once installed, make sure to set `luau-lsp.plugin.enabled` to `true` in settings.
   - See the [recommended settings for this extension](#recommended-settings-for-luau-lsp)
 - [StyLua](https://marketplace.visualstudio.com/items?itemName=JohnnyMorganz.stylua): Extension for StyLua which makes it easy to set up VSCode to format your code at the press of a keyboard shortcut.
 - [Indenticator](https://marketplace.visualstudio.com/items?itemName=SirTori.indenticator) (optional): Highlights your current indent level. If you're the kind of programmer who lives on the edge (of your text editor, because you have code which uses 15 indents), then you'll find this useful.
@@ -195,133 +196,40 @@ The extension for Luau LSP comes with many settings. Without too much commentary
 ```
 
 ### Roblox Libraries
-Some utility libraries which are helpful for Roblox development are installed by default.
-You can delete these at your preference, but note that some of them, such as Schedule and Signal, are used in the project template.
+Some utility libraries which are helpful for Roblox development are installed
+by default. You can delete these at your preference, but note that some of them,
+such as Schedule and Signal, are used in the project template code.
 
 #### Game Schedules
-TODO: Improve this section
-
-Schedules for commonly used events are provided in SchedulesServer and SchedulesClient.
-For any schedule, you can create a job, which is code specified to run as part of
-the schedule. What's useful is that you can specify a job to occur after other jobs.
-As such, Schedules differ from Signals in that they define a consistent order for
-callbacks.
-
-The `initialize` and `start` schedules are used in module loading. If you've used
-[Knit](https://sleitnick.github.io/Knit/) before, you may be familiar with these
-names. Knit is an old Roblox game framework which has [a few problems](https://medium.com/@sleitnick/knit-its-history-and-how-to-build-it-better-3100da97b36), but it had a few useful
-ideas. Here we're adapting one of them: each top-level game systems are given a
-lifecycle to implement:
-1. a bootloading step, where the module is required by the entrypoint of the system
-2. an `initialize` step, where the module can prepare itself to be required
-3. a `start` step, where the module can run any game logic it is are concerned with
-
-Modules that implement these schedules are conventionally called ___services___ if on
-the server, and ___controllers___ if on the client. Not every module in the game will
-be a service or controller; in general, top-level game systems each control one
-feature, or one aspect of the game.
-
-Here is an example of how schedules simplify code by allowing more assumptions
-to be made:
-
-```lua
-local SchedulesServer = require(path.to.SchedulesServer)
-
-local ImportantPartService = {}
-
-ImportantPartService.initializeJob = SchedulesServer.start.job(function()
-    local importantPart = Instance.new("Part")
-    importantPart.Name = "Very important part"
-    importantPart.Parent = workspace
-end)
-
-return ImportantPartService
-```
-
-```lua
-local ImportantPartService = require(path.to.ImportantPartService)
-local SchedulesServer = require(path.to.SchedulesServer)
-
-local PartPrintingService = {}
-
-PartPrintingService.initializeJob = SchedulesServer.start.job(function()
-    print(workspace.ImportantPart) --> "Very important part"
-end, ImportantPartService.initializeJob) -- Here we specify that this should run after the part is created by ImportantPartService
-
-return PartPrintingService
-```
+TODO: [Link](documentation/libraries/1-game-schedules.md)
 
 #### Character Wrapper
-CharacterService, CharacterController, and CharacterShared serve as a single point
-where commonly used character instances are accessed, and then made easily available
-through an interface. They also fire character-related game schedules such as
-`loadCharacter`.
-
-The character wrapper aims to eliminate the tired patterns that appear in code
-which handles character instances. Here's an example of how those patterns tend
-to manifest:
-
-```lua
--- Give each player an anti-gravity force when they spawn
-
-local Players = game:GetService("Players")
-
-local function onCharacterAdded(character: Model)
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    local rootAttachment = humanoidRootPart:WaitForChild("RootAttachment")
-
-    local force = path.to.AntigravityForce:Clone()
-    force.Attachment0 = rootAttachment
-    force.Parent = humanoidRootPart
-end
-
-local function onPlayerAdded(player: Player)
-    if player.Character then
-        onCharacterAdded(player.Character)
-    end
-    player.CharacterAdded:Connect(onCharacterAdded)
-end
-
-for _, player in Players:GetPlayers() do
-    onPlayerAdded(player)
-end
-Players.PlayerAdded:Connect(onPlayerAdded)
-```
-
-Now let's look at how that same code looks using the character wrapper and schedules:
-```lua
--- Give each player an anti-gravity force when they spawn
-
-local SchedulesServer = require(path.to.SchedulesServer)
-
-SchedulesServer.loadCharacter.job(function(instances, player)
-    local force = path.to.AntigravityForce:Clone()
-    force.Attachment0 = instances.rootPart.RootAttachment
-    force.Parent = instances.rootPart
-end)
-```
-
-The second is obviously much more concise. Using some sort of character wrapper
-is a no-brainer. Another benefit of this approach is that if we start commonly
-using another character instance which we didn't add to the `instances` table,
-we can just modify the character wrapper to include it as well!
-
-Imagine if we were using patterns akin to the first example
-throughout the whole game! Unfortunately, that reality is quite common in many
-codebases.
+TODO: [Link](documentation/libraries/2-character-wrapper.md)
 
 #### List of utility libraries
-- AssertInstance: Makes it easy to validate that an instance has the correct state. Writes high-quality error messages for you.
+More detailed documentation for each of these can be found in their respective modules.
+Short descriptions of each library are provided below:
+- AssertInstance: Validate that an Instance has the correct state, or display
+  automatically-written, high-quality error messages in the output. Useful for
+  using Roblox Studio as a level editor.
 - Loader: Bootloader for modules. Supports match and ignore globs.
 - NumberUtil: Extra math functions and utilities for formatting numbers.
 - RandomPoint: Get uniformly random points inside of primitive parts.
-- ReactiveValue: Simple reactive state management through Value Instance-like objects.
-- Schedule: Define routines in which game code runs in a defined sequence.
-- SFXUtil: Easily play sounds and cross-fade music without needing to write configuration code for common use cases.
-- Spring: Continuous, configurable spring-like motion for use in UI and 2D and 3D animations.
-- State: Table-driven, flexible state machine implementation. Makes it easy to convert from a state graph to code or vice versa.
+- ReactiveValue: Simple reactive state management through Value Instance-like
+  objects (e.g. StringValue, NumberValue).
+- Schedule: Create routines in which game code runs in a defined sequence.
+- SFXUtil: Easily play sounds and cross-fade music without needing to write
+  configuration code for common use cases like deleting a sound after it has
+  finished playing.
+- Spring: Continuous, configurable spring-like motion for use in UI and 2D and
+  3D animations.
+- State: Table-driven, flexible state machine implementation. Easy to mentally
+  convert from a state graph to code or vice versa.
 - TableUtil: Extra table functions.
-- Tagged: CollectionService utility library enabling high-performance code which interacts with tagged instances by using cached collections. Provides shorthands for many common use cases.
+- Tagged: CollectionService utility library enabling high-performance code which
+  interacts with tagged Instances by using cached collections. Provides
+  shorthands for many common use cases, such as observing tagged Instances under
+  an ancestor Instance.
 - VFXUtil: Easily play visual effects and tween model pivots and scales.
 - Weighted: Library for weighted random choice systems.
 
@@ -330,140 +238,9 @@ codebases.
 - sleitnick/Signal: Create your own events using an API that mirrors RBXScriptSignal.
 
 ## Style Guide
-
-In addition to using StyLua as a code formatter, here are some extra guidelines
-to follow to keep your code looking clean and easy to read.
-
-### Casing
-Generally, you can follow these guidelines for casing:
-1. Dependencies and imports (services, libraries, static instance paths, shorthands) use the same case as the name of the dependency or import.
-2. Configuration constants use SCREAMING_SNAKE_CASE.
-3. Type definitions use PascalCase.
-4. Exports (the return values from modules) use PascalCase if the value is a namespace (i.e. a table), or camelCase otherwise.
-5. Everything else uses camelCase.
-
-### Script Structure
-Below is a code block demonstrating the sections files in this project template
-are usually organized into.
-Note that the comments marking sections (e.g. `-- Documentation`) are purely for
-example, and it is preferable not to write them.
-```lua
--- Documentation (if needed to explain the file, such as for reusable libraries)
--- Dates are in ISO format
---[[
-    MyLibrary v1.2.1
-    Author: Great_Bird
-    Date: 2025-02-12
-    Last updated: 2025-02-12
-  
-    Cool stuff goes in this library.
-  
-    Usage:
-    print(MyLibrary.thumbsups) --> 2
-    MyLibrary.giveCompliment() --> "you are super cool"
-    MyLibrary.spawnMonsters(5)
-  
-    Changelog:
-    v1.2.1
-    - Changes:
-        - The default value for `MyLibrary.thumbsups` is now anatomically correctly set to 2, down from 3.
-    v1.2.0
-    - Additions:
-        - Added `MyLibrary.thumbsups` field.
-    v1.1.0
-    - Fixes:
-        - `MyLibrary.giveCompliment` now compliments the user instead of telling them they have bad hair
-    v1.0.0
-    - Notes: Release
-]]
-
--- Comment directives
---!strict
---!optimize 2
-
--- Services (PascalCase)
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- Dependencies (same casing as the way the dependencies are named)
--- Should be alphabetically sorted. StyLua can be configured to do this for you.
-local MonsterRegistry = require(ReplicatedStorage.Shared.MonsterRegistry)
-local Tagged = require(ReplicatedStorage.Util.Tagged)
-local TagRegistry = require(ReplicatedStorage.Shared.TagRegistry)
-
--- Imports and shorthands (same casing as the way the imports are named)
-local monsterTags = TagRegistry.monsterTags
-local getTagged = Tagged.get
-
--- Configuration constants (SCREAMING_SNAKE_CASE).
--- Constants should never be set after they are defined. Additionally, they should
--- provide some sort of clarification on what they control.
-local MAX_MONSTERS = 10  -- Max number of spawned monsters
-
--- Type definitions (PascalCase)
-export type MonsterState = {
-    model: Model,
-    damage: number,
-    health: number,
-}
-
--- Variables and state (camelCase)
-local monsters: { MonsterState } = {}
-
--- Independent functions (camelCase names and parameters)
-local function outputWarn(message: string)
-    warn(`[MyLibrary]: {message}`)
-end
-
--- File code and exports
--- Return value is simply called "module" instead of reflecting the name of the file.
--- If you want to name it after the file name, use the same casing as the file name.
-local module = {
-    thumbsups = 2, -- Exported property (camelCase)
-}
-
--- Exported functions (camelCase names and parameters)
-
--- Moonwave documentation comments should be put before each function. Luau LSP
--- can display this documentation when the user hovers over a reference to the function
---[=[
-    Spawns random monsters. Does not spawn any more than MAX_MONSTERS.
-
-    @param monsterCount (number) The number of monsters to spawn.
-]=]
-function module.spawnMonsters(monsterCount: number)
-    if #monsters == MAX_MONSTERS then
-        outputWarn("Could not spawn any monsters because the maximum monsters has been reached")
-        return
-    end
-
-    for i = #monsters + 1, math.min(MAX_MONSTERS, monsterCount) do
-        local monsterTag = monsterTags[math.random(1, #monsterTags)]
-
-        local model = MonsterRegistry.getModelForMonsterTag(monsterTag):Clone()
-        model.Parent = workspace
-        model:AddTag(monsterTag)
-
-        table.insert(monsters, {
-            model = model,
-            health = math.random(80, 120),
-            damage = math.random(10, 16),
-        })
-    end
-end
-
---[=[
-    Outputs a compliment for the user.
-]=]
-function module.giveCompliment()
-    print("you are super cool")
-end
-
--- Module return
-return module
-```
+TODO: [Link](documentation/style-guide.md)
 
 ## Understanding
-TODO
 
 ### What does each file do?
-TODO
+TODO: [Link](documentation/understanding/what-does-each-file-do.md)
