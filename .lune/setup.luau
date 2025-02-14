@@ -40,8 +40,8 @@ if table.find(process.args, "help") then
 	process.exit(0)
 end
 
-local DevSetupTasks = require("dev-setup-tasks")
-local ProcessUtil = require("process-util")
+local DevSetupTasks = require("modules/dev-setup-tasks")
+local ProcessUtil = require("modules/process-util")
 
 DevSetupTasks.fetchTypeDefinitions()
 DevSetupTasks.installPackages()

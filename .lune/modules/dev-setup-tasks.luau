@@ -1,7 +1,7 @@
 local fs = require("@lune/fs")
 local net = require("@lune/net")
 local process = require("@lune/process")
-local Config = require("config")
+local Config = require("../config")
 local ProcessUtil = require("process-util")
 local Remodel = require("remodel")
 

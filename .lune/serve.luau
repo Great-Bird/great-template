@@ -1,5 +1,5 @@
-local ProcessUtil = require("process-util")
-local DevSetupTasks = require("dev-setup-tasks")
+local ProcessUtil = require("modules/process-util")
+local DevSetupTasks = require("modules/dev-setup-tasks")
 
 DevSetupTasks.serveProject()
 ProcessUtil.printAllCompleted()

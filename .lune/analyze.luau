@@ -26,7 +26,7 @@
 local process = require("@lune/process")
 local fs = require("@lune/fs")
 local stdio = require("@lune/stdio")
-local ProcessUtil = require("process-util")
+local ProcessUtil = require("modules/process-util")
 local Config = require("config")
 
 local DEFINITIONS_PATH: string = Config.typeDefinitionsFilePath -- Global type definition file

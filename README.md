@@ -166,7 +166,10 @@ If you're curious about what each part of this project structure does, see
 - [Incredibly In Your Face](https://marketplace.visualstudio.com/items?itemName=VirejDasani.incredibly-in-your-face) (optional): Mr. Incredible will become more and more uncanny as you write more errors in your code. Very effective at motivating you to write less errors.
 
 #### Recommended settings for Luau LSP
-The extension for Luau LSP comes with many settings. Without too much commentary, here are some recommended settings to paste into your `settings.json` (which can be opened by typing "Open User Settings (JSON)" in the command palette):
+The extension for Luau LSP comes with many settings. Without too much
+commentary, here are some recommended settings to paste into your
+`settings.json` (which can be opened by typing "Open User Settings (JSON)" in
+the command palette):
 ```json
 "luau-lsp.completion.autocompleteEnd": true,
 "luau-lsp.completion.imports.enabled": true,
@@ -201,14 +204,15 @@ by default. You can delete these at your preference, but note that some of them,
 such as Schedule and Signal, are used in the project template code.
 
 #### Game Schedules
-TODO: [Link](documentation/libraries/1-game-schedules.md)
+See [the page on Game Schedules](documentation/libraries/1-game-schedules.md)
 
 #### Character Wrapper
-TODO: [Link](documentation/libraries/2-character-wrapper.md)
+See [the page on the Character Wrapper](documentation/libraries/2-character-wrapper.md)
 
 #### List of utility libraries
-More detailed documentation for each of these can be found in their respective modules.
-Short descriptions of each library are provided below:
+More detailed documentation for each of these can be found in their respective
+modules in `src/shared/Util`. Short descriptions of each library are provided
+below:
 - AssertInstance: Validate that an Instance has the correct state, or display
   automatically-written, high-quality error messages in the output. Useful for
   using Roblox Studio as a level editor.
@@ -234,11 +238,13 @@ Short descriptions of each library are provided below:
 - Weighted: Library for weighted random choice systems.
 
 #### List of Roblox packages
-- howmanysmall/Janitor: Garbage collection made easy and ergonomic.
-- sleitnick/Signal: Create your own events using an API that mirrors RBXScriptSignal.
+- [howmanysmall/Janitor](https://howmanysmall.github.io/Janitor/): Garbage
+  collection made easy and ergonomic.
+- [sleitnick/Signal](https://sleitnick.github.io/RbxUtil/api/Signal/):
+  Create your own events using an API that mirrors RBXScriptSignal.
 
 ## Style Guide
-TODO: [Link](documentation/style-guide.md)
+See the [page on for the style guide](documentation/style-guide.md)
 
 ## Understanding
 
