@@ -36,7 +36,7 @@ See https://github.com/rojo-rbx/rokit for documentation and installation instruc
 
 After you've installed Rokit, if you haven't already, run
 ```bash
-rokit self-install
+rokit self-update
 ```
 to get the latest version of Rokit. Next, run
 ```bash
