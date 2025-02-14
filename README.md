@@ -1,7 +1,29 @@
 # great-template
 A great template to use for Roblox projects.
 
-TODO: Table of contents
+## Table of Contents
+
+- [great-template](#great-template)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+    - [Tools](#tools)
+    - [Configuration](#configuration)
+    - [Dependencies](#dependencies)
+      - [Tools](#tools-1)
+      - [Roblox Packages](#roblox-packages)
+    - [Final Setup](#final-setup)
+  - [List of Tools Used](#list-of-tools-used)
+    - [Toolchain](#toolchain)
+    - [Recommended VSCode Extensions](#recommended-vscode-extensions)
+      - [Recommended settings for Luau LSP](#recommended-settings-for-luau-lsp)
+    - [Roblox Libraries](#roblox-libraries)
+      - [Game Schedules](#game-schedules)
+      - [Character Wrapper](#character-wrapper)
+      - [List of utility libraries](#list-of-utility-libraries)
+      - [List of Roblox packages](#list-of-roblox-packages)
+  - [Style Guide](#style-guide)
+  - [Understanding](#understanding)
+    - [What does each file do?](#what-does-each-file-do)
 
 ## Quick Start
 
@@ -204,10 +226,10 @@ by default. You can delete these at your preference, but note that some of them,
 such as Schedule and Signal, are used in the project template code.
 
 #### Game Schedules
-See [the page on Game Schedules](documentation/libraries/1-game-schedules.md)
+See [the page on Game Schedules](documentation/libraries/1-game-schedules.md).
 
 #### Character Wrapper
-See [the page on the Character Wrapper](documentation/libraries/2-character-wrapper.md)
+See [the page on the Character Wrapper](documentation/libraries/2-character-wrapper.md).
 
 #### List of utility libraries
 More detailed documentation for each of these can be found in their respective
@@ -244,9 +266,9 @@ below:
   Create your own events using an API that mirrors RBXScriptSignal.
 
 ## Style Guide
-See the [page on for the style guide](documentation/style-guide.md)
+See [the page on the style guide](documentation/style-guide.md).
 
 ## Understanding
 
 ### What does each file do?
-TODO: [Link](documentation/understanding/what-does-each-file-do.md)
+See [the page on what each file does](documentation/understanding/what-does-each-file-do.md).
