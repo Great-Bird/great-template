@@ -46,7 +46,7 @@ in the VSCode terminal, and press Y to trust each tool when prompted. This shoul
 install every needed tool for using this project template.
 
 Note: If confused while using CLI tools, you should be able to run them with the
-`--help` flag (e.g `rokit --help`) to view usage instructions. Here are some example
+`--help` flag (e.g. `rokit --help`) to view usage instructions. Here are some example
 usage instructions for Rokit (run in a Git Bash terminal):
 ```bash
 great@Birdnest MINGW64 ~/Documents/GitHub/great-template (main)
