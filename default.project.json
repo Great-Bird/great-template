@@ -1,5 +1,5 @@
 {
-  "name": "great-template",
+  "name": "Great Project",
   "emitLegacyScripts": false,
   "tree": {
     "$className": "DataModel",
