@@ -1,0 +1,40 @@
+{
+  "name": "Testing Great Project",
+  "emitLegacyScripts": false,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Client": {
+        "$ignoreUnknownInstances": false,
+        "$path": "src/Client"
+      },
+      "Packages": {
+        "$ignoreUnknownInstances": false,
+        "$path": "Packages"
+      },
+      "DevPackages": {
+        "$ignoreUnknownInstances": false,
+        "$path": "test/DevPackages"
+      },
+      "Shared": {
+        "$ignoreUnknownInstances": false,
+        "$path": "src/Shared"
+      },
+      "Testing": {
+        "$ignoreUnknownInstances": false,
+        "$path": "test/src"
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$ignoreUnknownInstances": false,
+        "$path": "src/Server"
+      },
+      "ServerPackages": {
+        "$ignoreUnknownInstances": false,
+        "$path": "ServerPackages"
+      }
+    },
+    "$ignoreUnknownInstances": true
+  }
+}

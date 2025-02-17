@@ -43,7 +43,9 @@
 	- Notes: Release
 ]]
 
-local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local CollectionService = require(ReplicatedStorage.Shared.Services.CollectionService)
 
 local cachedCollections: { [string]: { Instance } } = {}
 

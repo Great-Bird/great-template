@@ -7,13 +7,14 @@
 	Run `lune run analyze help` for usage instructions.
 
 	Script which runs the luau-lsp analyze command. Displays all type errors and warnings in the console.
+
 	You will some tools installed to use this script. They can be found here:
 	* Lune: https://github.com/lune-org/lune
 	* Luau LSP: https://github.com/JohnnyMorganz/luau-lsp
 	Place this file into a `.lune` directory in the root of your project to use it.
 	
 	This script is very project-specific, so you may need to modify it to fit your project's needs.
-	Constant variables are provided for easy configuration.
+	Constant variables are provided for easy configuration; see `config.luau`.
 
 	Changelog:
 	v0.1.1 (2025-02-12)

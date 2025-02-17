@@ -12,10 +12,6 @@
         "$ignoreUnknownInstances": false,
         "$path": "Packages"
       },
-      "DevPackages": {
-        "$ignoreUnknownInstances": false,
-        "$path": "DevPackages"
-      },
       "Shared": {
         "$ignoreUnknownInstances": false,
         "$path": "src/Shared"

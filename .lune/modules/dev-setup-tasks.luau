@@ -38,10 +38,21 @@ function module.fetchTypeDefinitions()
 	end
 end
 
-function module.installPackages()
-	ProcessUtil.spawnProcess("wally", { "install" }, nil, "Installed packages", "Failed to install packages")
+function module.installPackages(projectDirectoryPath: string?)
+	local args = { "install" }
+	if projectDirectoryPath then
+		table.insert(args, "--project-path")
+		table.insert(args, projectDirectoryPath)
+	end
+	ProcessUtil.spawnProcess("wally", args, nil, "Installed packages", "Failed to install packages")
 end
 
+--[=[
+	This function is a workaround for wally not creating directories for empty categories.
+
+	This function is used to avoid having to edit the project file when no
+	packages exist in a category (e.g. `Packages`, `ServerPackages`, `DevPackages`).
+]=]
 function module.createMissingPackageDirectories()
 	if not fs.isDir("Packages") then
 		fs.writeDir("Packages")
@@ -51,23 +62,23 @@ function module.createMissingPackageDirectories()
 		fs.writeDir("ServerPackages")
 		ProcessUtil.printTaskCompleted("Added ServerPackages folder")
 	end
-	if not fs.isDir("DevPackages") then
-		fs.writeDir("DevPackages")
-		ProcessUtil.printTaskCompleted("Added DevPackages folder")
+	if not fs.isDir("test/DevPackages") then
+		fs.writeDir("test/DevPackages")
+		ProcessUtil.printTaskCompleted("Added test/DevPackages folder")
 	end
 end
 
-function module.createSourcemap()
+function module.createSourcemap(projectFilePath: string?)
 	ProcessUtil.spawnProcess(
 		"rojo",
-		{ "sourcemap", Config.projectFilePath, "--include-non-scripts", "--output", Config.sourcemapFilePath },
+		{ "sourcemap", projectFilePath or Config.projectFilePath, "--include-non-scripts", "--output", Config.sourcemapFilePath },
 		nil,
 		"Created sourcemap",
 		"Failed to create sourcemap"
 	)
 end
 
-function module.reexportPackageTypes()
+function module.reexportPackageTypes(reexportDevPackageTypes: boolean?)
 	ProcessUtil.spawnProcess(
 		"wally-package-types",
 		{ "--sourcemap", Config.sourcemapFilePath, "Packages" },
@@ -84,13 +95,15 @@ function module.reexportPackageTypes()
 		"Failed to re-export server package types"
 	)
 
-	ProcessUtil.spawnProcess(
-		"wally-package-types",
-		{ "--sourcemap", Config.sourcemapFilePath, "DevPackages" },
-		nil,
-		"Re-exported dev package types",
-		"Failed to re-export dev package types"
-	)
+	if reexportDevPackageTypes then
+		ProcessUtil.spawnProcess(
+			"wally-package-types",
+			{ "--sourcemap", Config.sourcemapFilePath, "test/DevPackages" },
+			nil,
+			"Re-exported dev package types",
+			"Failed to re-export dev package types"
+		)
+	end
 end
 
 return module
