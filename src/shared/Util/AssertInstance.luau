@@ -291,7 +291,9 @@ function module.hasAttribute(
 
 	if expectedValue ~= nil then
 		local valid = false
-		if type(expectedValue) == "table" then
+		if expectedType and string.find(expectedType, "nil") and value == nil then
+			valid = true
+		elseif type(expectedValue) == "table" then
 			if #expectedValue == 0 then
 				error("expectedValue cannot be an empty table")
 			end
