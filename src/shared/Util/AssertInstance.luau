@@ -226,6 +226,7 @@ end
 	@param tagName The name of the tag to check for. Can be a single tag or a list of tags separated by "|".
 	@return The matched tag value.
 ]=]
+-- TODO: Allow support for '&' to check for multiple tags in `tagName`
 function module.hasTag(instance: Instance, tagName: string)
 	local tags = splitValues(tagName)
 	if #tags == 0 then
