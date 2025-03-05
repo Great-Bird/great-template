@@ -188,6 +188,8 @@ describe("Loader", function()
 				expect(moduleScriptsToModules[mockMatchedModuleScript]).toBeDefined()
 				expect(moduleScriptsToModules[mockIgnoredModuleScript]).toBeUndefined()
 			end)
+
+			it.todo("returns a map of ModuleScripts to their respective modules")
 		end)
 	end)
 end)

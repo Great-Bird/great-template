@@ -102,9 +102,9 @@ function module.loadTopLevelModules(
 				continue
 			end
 
-			local returnedModule = xpcall(require, function(err)
+			local _, returnedModule = xpcall(require, function(err)
 				error(`Failed to require {instance:GetFullName()}: {err}`)
-			end, instance) :: any
+			end, instance)
 			
 			moduleScriptsToModules[instance] = returnedModule
 		else
