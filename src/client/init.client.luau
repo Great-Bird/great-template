@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local CharacterController = require(script.Character.CharacterController)
 local SchedulesClient = require(script.Schedules.SchedulesClient)
 local Loader = require(ReplicatedStorage.Shared.Util.Loader)
 
@@ -9,7 +10,7 @@ local localPlayer = Players.LocalPlayer
 
 Loader.loadTopLevelModules(script)
 
-SchedulesClient.initialize.start()
+SchedulesClient.initialize.startNoYield()
 SchedulesClient.start.startNoYield()
 
 RunService.PreRender:Connect(SchedulesClient.preRender.startNoYield)
@@ -40,3 +41,8 @@ for _, player in Players:GetPlayers() do
 end
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+CharacterController.characterLoaded:Connect(SchedulesClient.loadCharacter.startNoYield)
+CharacterController.characterUnloading:Connect(SchedulesClient.unloadCharacter.startNoYield)
+CharacterController.localCharacterLoaded:Connect(SchedulesClient.loadLocalCharacter.startNoYield)
+CharacterController.localCharacterUnloading:Connect(SchedulesClient.unloadLocalCharacter.startNoYield)

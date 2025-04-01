@@ -2,12 +2,13 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local CharacterService = require(script.Character.CharacterService)
 local Loader = require(ReplicatedStorage.Shared.Util.Loader)
 local SchedulesServer = require(script.Schedules.SchedulesServer)
 
 Loader.loadTopLevelModules(script)
 
-SchedulesServer.initialize.start()
+SchedulesServer.initialize.startNoYield()
 SchedulesServer.start.startNoYield()
 
 RunService.Heartbeat:Connect(SchedulesServer.heartbeat.startNoYield)
@@ -22,3 +23,6 @@ for _, player in Players:GetPlayers() do
 end
 Players.PlayerAdded:Connect(SchedulesServer.loadPlayer.startNoYield)
 Players.PlayerRemoving:Connect(SchedulesServer.unloadPlayer.startNoYield)
+
+CharacterService.characterLoaded:Connect(SchedulesServer.loadCharacter.startNoYield)
+CharacterService.characterUnloading:Connect(SchedulesServer.unloadCharacter.startNoYield)

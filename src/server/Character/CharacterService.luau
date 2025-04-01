@@ -14,7 +14,7 @@ local module = {
 	characterUnloading = Signal.new() :: Signal.Signal<CharacterShared.Instances, Player>,
 }
 
-local function setInstances(character: Model, player: Player)
+local function waitForInstances(character: Model, player: Player): CharacterShared.Instances
 	local rootPart = character:WaitForChild("HumanoidRootPart")
 	assert(rootPart:IsA("Part"), "Character must have a HumanoidRootPart as its PrimaryPart")
 	local humanoid = character:WaitForChild("Humanoid")
@@ -24,7 +24,7 @@ local function setInstances(character: Model, player: Player)
 	local head = character:WaitForChild("Head")
 	assert(head:IsA("Part"), "Character must have a Head Part")
 
-	local instances: CharacterShared.Instances = {
+	return {
 		animator = animator,
 		character = character,
 		head = head,
@@ -32,11 +32,6 @@ local function setInstances(character: Model, player: Player)
 		player = player,
 		rootPart = rootPart,
 	}
-	playersToInstances[player] = instances
-	module.characterLoaded:Fire(instances, player)
-	SchedulesServer.loadCharacter.start(instances, player)
-
-	return instances
 end
 
 function module.observeCharacter(
@@ -87,19 +82,19 @@ end
 
 module.loadPlayerJob = SchedulesServer.loadPlayer.job(function(player)
 	local function onCharacterAdded(character: Model)
-		assert(not playersToInstances[player], "Character is already loaded")
-
-		-- Set instances for character immediately so the client gets the CoinHitbox as soon as possible
-		setInstances(character, player)
+		if not playersToInstances[player] then
+			local instances = waitForInstances(character, player)
+			playersToInstances[player] = instances
+			module.characterLoaded:Fire(instances, player)
+		end
 	end
 
 	local function onCharacterRemoving(character: Model)
 		local instances = playersToInstances[player]
-		assert(instances, "Character must be loaded in order to remove character")
-
-		module.characterUnloading:Fire(instances, player)
-		SchedulesServer.unloadCharacter.start(instances, player)
-		playersToInstances[player] = nil
+		if instances then
+			module.characterUnloading:Fire(instances, player)
+			playersToInstances[player] = nil
+		end
 	end
 
 	if player.Character then

@@ -18,7 +18,7 @@ local module = {
 	localCharacterUnloading = Signal.new() :: Signal.Signal<CharacterShared.Instances, Player>,
 }
 
-local function setInstances(character: Model, player: Player)
+local function waitForInstances(character: Model, player: Player): CharacterShared.Instances
 	local rootPart = character:WaitForChild("HumanoidRootPart")
 	assert(rootPart:IsA("Part"), "Character must have a HumanoidRootPart")
 	local humanoid = character:WaitForChild("Humanoid")
@@ -28,7 +28,7 @@ local function setInstances(character: Model, player: Player)
 	local head = character:WaitForChild("Head")
 	assert(head:IsA("Part"), "Character must have a Head Part")
 
-	local instances: CharacterShared.Instances = {
+	return {
 		animator = animator,
 		character = character,
 		head = head,
@@ -36,14 +36,6 @@ local function setInstances(character: Model, player: Player)
 		player = player,
 		rootPart = rootPart,
 	}
-
-	playersToInstances[player] = instances
-	module.characterLoaded:Fire(instances, player)
-	SchedulesClient.loadCharacter.start(instances, player)
-	if player == localPlayer then
-		module.localCharacterLoaded:Fire(instances, player)
-		SchedulesClient.loadLocalCharacter.start(instances, player)
-	end
 end
 
 function module.observeCharacter(
@@ -101,22 +93,25 @@ end
 
 module.loadPlayerJob = SchedulesClient.loadPlayer.job(function(player)
 	local function onCharacterAdded(character: Model)
-		assert(not playersToInstances[player], "Character is already loaded")
-
-		setInstances(character, player)
+		if not playersToInstances[player] then
+			local instances = waitForInstances(character, player)
+			playersToInstances[player] = instances
+			module.characterLoaded:Fire(instances, player)
+			if player == localPlayer then
+				module.localCharacterLoaded:Fire(instances, player)
+			end
+		end
 	end
 
 	local function onCharacterRemoving(character: Model)
 		local instances = playersToInstances[player]
-		assert(instances, "Character must be loaded in order to remove character")
-
-		module.characterUnloading:Fire(instances, player)
-		SchedulesClient.unloadCharacter.start(instances, player)
-		if player == localPlayer then
-			module.localCharacterUnloading:Fire(instances, player)
-			SchedulesClient.unloadLocalCharacter.start(instances, player)
+		if instances then
+			module.characterUnloading:Fire(instances, player)
+			if player == localPlayer then
+				module.localCharacterUnloading:Fire(instances, player)
+			end
+			playersToInstances[player] = nil
 		end
-		playersToInstances[player] = nil
 	end
 
 	if player.Character then
