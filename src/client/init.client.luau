@@ -2,8 +2,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local SchedulesClient = require(script.Schedules.SchedulesClient)
+local CharacterController = require(script.Character.CharacterController)
 local Loader = require(ReplicatedStorage.Shared.Util.Loader)
+local SchedulesClient = require(script.Schedules.SchedulesClient)
 
 local localPlayer = Players.LocalPlayer
 
@@ -22,6 +23,7 @@ RunService.PreSimulation:Connect(SchedulesClient.preSimulation.startNoYield)
 RunService.PostSimulation:Connect(SchedulesClient.postSimulation.startNoYield)
 
 local function onPlayerAdded(player)
+	CharacterController.onPlayerAdded(player)
 	SchedulesClient.loadPlayer.startNoYield(player)
 	if player == localPlayer then
 		SchedulesClient.loadLocalPlayer.startNoYield(player)
@@ -29,6 +31,7 @@ local function onPlayerAdded(player)
 end
 
 local function onPlayerRemoving(player)
+	CharacterController.onPlayerRemoving(player)
 	SchedulesClient.unloadPlayer.startNoYield(player)
 	if player == localPlayer then
 		SchedulesClient.unloadLocalPlayer.startNoYield(player)
@@ -40,3 +43,8 @@ for _, player in Players:GetPlayers() do
 end
 Players.PlayerAdded:Connect(onPlayerAdded)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+CharacterController.characterLoaded:Connect(SchedulesClient.loadCharacter.startNoYield)
+CharacterController.characterUnloading:Connect(SchedulesClient.unloadCharacter.startNoYield)
+CharacterController.localCharacterLoaded:Connect(SchedulesClient.loadLocalCharacter.startNoYield)
+CharacterController.localCharacterUnloading:Connect(SchedulesClient.unloadLocalCharacter.startNoYield)

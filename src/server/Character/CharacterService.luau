@@ -1,20 +1,17 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local CharacterShared = require(ReplicatedStorage.Shared.Character.CharacterShared)
-local Janitor = require(ReplicatedStorage.Packages.Janitor)
-local SchedulesServer = require(ServerScriptService.Server.Schedules.SchedulesServer)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
 local playersToInstances: { [Player]: CharacterShared.Instances } = {}
-local playerJanitor = Janitor.new()
+local playerConnections = {}
 
 local module = {
 	characterLoaded = Signal.new() :: Signal.Signal<CharacterShared.Instances, Player>,
 	characterUnloading = Signal.new() :: Signal.Signal<CharacterShared.Instances, Player>,
 }
 
-local function setInstances(character: Model, player: Player)
+local function waitForInstances(character: Model, player: Player): CharacterShared.Instances
 	local rootPart = character:WaitForChild("HumanoidRootPart")
 	assert(rootPart:IsA("Part"), "Character must have a HumanoidRootPart as its PrimaryPart")
 	local humanoid = character:WaitForChild("Humanoid")
@@ -24,7 +21,7 @@ local function setInstances(character: Model, player: Player)
 	local head = character:WaitForChild("Head")
 	assert(head:IsA("Part"), "Character must have a Head Part")
 
-	local instances: CharacterShared.Instances = {
+	return {
 		animator = animator,
 		character = character,
 		head = head,
@@ -32,11 +29,6 @@ local function setInstances(character: Model, player: Player)
 		player = player,
 		rootPart = rootPart,
 	}
-	playersToInstances[player] = instances
-	module.characterLoaded:Fire(instances, player)
-	SchedulesServer.loadCharacter.start(instances, player)
-
-	return instances
 end
 
 function module.observeCharacter(
@@ -85,34 +77,39 @@ function module.getInstancesFromPart(part: BasePart): (CharacterShared.Instances
 	return nil, nil
 end
 
-module.loadPlayerJob = SchedulesServer.loadPlayer.job(function(player)
+function module.onPlayerAdded(player: Player)
 	local function onCharacterAdded(character: Model)
-		assert(not playersToInstances[player], "Character is already loaded")
-
-		-- Set instances for character immediately so the client gets the CoinHitbox as soon as possible
-		setInstances(character, player)
+		if not playersToInstances[player] then
+			local instances = waitForInstances(character, player)
+			playersToInstances[player] = instances
+			module.characterLoaded:Fire(instances, player)
+		end
 	end
 
 	local function onCharacterRemoving(character: Model)
 		local instances = playersToInstances[player]
-		assert(instances, "Character must be loaded in order to remove character")
-
-		module.characterUnloading:Fire(instances, player)
-		SchedulesServer.unloadCharacter.start(instances, player)
-		playersToInstances[player] = nil
+		if instances then
+			module.characterUnloading:Fire(instances, player)
+			playersToInstances[player] = nil
+		end
 	end
 
 	if player.Character then
 		onCharacterAdded(player.Character)
 	end
-	local janitor = Janitor.new()
-	janitor:Add(player.CharacterAdded:Connect(onCharacterAdded))
-	janitor:Add(player.CharacterRemoving:Connect(onCharacterRemoving))
-	playerJanitor:Add(janitor, "Destroy", player)
-end)
+	playerConnections[player] = {
+		player.CharacterAdded:Connect(onCharacterAdded),
+		player.CharacterRemoving:Connect(onCharacterRemoving),
+	}
+end
 
-module.unloadPlayerJob = SchedulesServer.unloadPlayer.job(function(player)
-	playerJanitor:Remove(player)
-end)
+function module.onPlayerRemoving(player: Player)
+	if playerConnections[player] then
+		for _, connection in playerConnections[player] do
+			connection:Disconnect()
+		end
+		playerConnections[player] = nil
+	end
+end
 
 return module
