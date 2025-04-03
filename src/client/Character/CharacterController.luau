@@ -83,8 +83,8 @@ function module.getAllInstances(): { [Player]: CharacterShared.Instances }
 	return playersToInstances
 end
 
-function module.getInstancesFromPart(part: BasePart): (CharacterShared.Instances?, Player?)
-	local player = CharacterShared.getPlayerFromInstance(part)
+function module.getInstancesFromChild(child: Instance): (CharacterShared.Instances?, Player?)
+	local player = CharacterShared.getPlayerFromInstance(child)
 	if player then
 		return playersToInstances[player], player
 	end
