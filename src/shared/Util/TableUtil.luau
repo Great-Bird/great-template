@@ -417,4 +417,51 @@ local function flatMapArray<T, U>(tbl: { T }, fn: (value: T, index: number) -> {
 end
 module.flatMapArray = flatMapArray
 
+-- stylua: ignore
+local zipTables:
+	& <K, T1>({[K]: T1}) -> () -> (K, T1)
+	& <K, T1, T2>({[K]: T1}, {[K]: T2}) -> () -> (K, T1, T2)
+	& <K, T1, T2, T3>({[K]: T1}, {[K]: T2}, {[K]: T3}) -> () -> (K, T1, T2, T3)
+	& <K, T1, T2, T3, T4>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}) -> () -> (K, T1, T2, T3, T4)
+	& <K, T1, T2, T3, T4, T5>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}) -> () -> (K, T1, T2, T3, T4, T5)
+	& <K, T1, T2, T3, T4, T5, T6>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}, {[K]: T6}) -> () -> (K, T1, T2, T3, T4, T5, T6)
+	& <K, T1, T2, T3, T4, T5, T6, T7>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}, {[K]: T6}, {[K]: T7}) -> () -> (K, T1, T2, T3, T4, T5, T6, T7)
+	& <K, T1, T2, T3, T4, T5, T6, T7, T8>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}, {[K]: T6}, {[K]: T7}, {[K]: T8}) -> () -> (K, T1, T2, T3, T4, T5, T6, T7, T8)
+	& <K, T1, T2, T3, T4, T5, T6, T7, T8, T9>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}, {[K]: T6}, {[K]: T7}, {[K]: T8}, {[K]: T9}) -> () -> (K, T1, T2, T3, T4, T5, T6, T7, T8, T9)
+	& <K, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>({[K]: T1}, {[K]: T2}, {[K]: T3}, {[K]: T4}, {[K]: T5}, {[K]: T6}, {[K]: T7}, {[K]: T8}, {[K]: T9}, {[K]: T10}) -> () -> (K, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+zipTables = function(...: { [any]: any }): () -> (any, ...any)
+	assert(select("#", ...) > 0, "Must pass at least one table")
+
+	local firstTable = select(1, ...)
+	local numTables = select("#", ...)
+	local otherTables = { select(2, ...) }
+	local currentKey = nil
+	return function()
+		local firstValue
+		currentKey, firstValue = next(firstTable, currentKey)
+		while currentKey ~= nil do
+			local values = { firstValue }
+
+			for i, otherTable in otherTables do
+				local currentValue = otherTable[currentKey]
+				if currentValue == nil then
+					break
+				end
+				values[i] = currentValue
+			end
+
+			if #values == numTables then
+				return currentKey, table.unpack(values)
+			end
+
+			currentKey, firstValue = next(firstTable, currentKey)
+		end
+		return nil
+	end
+end :: any
+--[=[
+	Returns an iterator function which returns the values of each shared key in the passed tables.
+]=]
+module.zipTables = zipTables
+
 return module
