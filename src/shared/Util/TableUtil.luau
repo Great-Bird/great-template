@@ -1,14 +1,14 @@
 --[[
-	TableUtil v0.1.0
+	TableUtil v0.1.1
 	Author: Great_Bird
 	Date: 2025-02-12
 	Last updated: 2025-02-12
 
 	Table utilities for Luau.
-	For performance reasons, this library generally does not treat tables as immutable.
-	If you need immutability, consider using `table.clone`, `table.freeze`, and `TableUtil.deepCopy`.
 
 	Changelog:
+	v0.1.1 (2025-03-13)
+	- Added many immutable functions, prefixed with `immut`.
 	v0.1.0 (2025-02-12)
 	- Notes: Release
 ]]
@@ -24,6 +24,16 @@ do
 	local random = Random.new()
 	getRandom = function(min, max)
 		return random:NextInteger(min, max)
+	end
+end
+
+local function immut<R, A...>(fn: (A...) -> R): (A...) -> R
+	return function(...): R
+		local result = fn(...)
+		if type(result) == "table" then
+			table.freeze(result)
+		end
+		return result
 	end
 end
 
@@ -62,6 +72,7 @@ local function mapArray<T, U>(tbl: { T }, fn: (value: T, index: number) -> U): {
 	return mapped
 end
 module.mapArray = mapArray
+module.immutMapArray = immut(mapArray)
 
 --[=[
 	Calls `fn` with `accumulator` for every element of the array, and then returns `accumulator`. 
@@ -73,6 +84,7 @@ local function reduceArray<T, U>(tbl: { T }, accumulator: U, fn: (accumulator: U
 	return accumulator
 end
 module.reduceArray = reduceArray
+module.immutReduceArray = immut(reduceArray)
 
 --[=[
 	Returns a new array which does not include any elements that `predicate` returns false for. 
@@ -87,9 +99,10 @@ local function filterArray<T>(tbl: { T }, predicate: (value: T, index: number) -
 	return filtered
 end
 module.filterArray = filterArray
+module.immutFilterArray = immut(filterArray)
 
 --[=[
-	Randomly shuffles the table using https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+	Randomly shuffles the table using [Fisher Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
 ]=]
 local function shuffleArray<T>(tbl: { T }, randomFn: RandomFn?): { T }
 	local random: RandomFn = randomFn or getRandom
@@ -102,6 +115,14 @@ end
 module.shuffleArray = shuffleArray
 
 --[=[
+	Randomly shuffles a clone of the table using [Fisher Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
+]=]
+local function immutShuffleArray<T>(tbl: { T }, randomFn: RandomFn?): { T }
+	return table.freeze(shuffleArray(table.clone(tbl), randomFn))
+end
+module.immutShuffleArray = immutShuffleArray
+
+--[=[
 	Gets the values of `tbl` as an array.
 ]=]
 local function values<T>(tbl: { [any]: T }): { T }
@@ -112,6 +133,7 @@ local function values<T>(tbl: { [any]: T }): { T }
 	return valueList
 end
 module.values = values
+module.immutValues = immut(values)
 
 --[=[
 	Gets the keys of `tbl` as an array.
@@ -124,6 +146,7 @@ local function keys<T>(tbl: { [T]: any }): { T }
 	return keysList
 end
 module.keys = keys
+module.immutKeys = immut(keys)
 
 --[=[
 	Returns a new table with the keys and values of `tbl` swapped.
@@ -136,6 +159,7 @@ local function invert<K, T>(tbl: { [K]: T }): { [T]: K }
 	return inverted
 end
 module.invert = invert
+module.immutInvert = immut(invert)
 
 --[=[
 	Returns a subarray of `tbl`.
@@ -144,6 +168,7 @@ local function sliceArray<T>(tbl: { T }, startIndex: number, endIndex: number): 
 	return table.move(tbl, startIndex, endIndex, 1, table.create(endIndex - startIndex + 1))
 end
 module.sliceArray = sliceArray
+module.immutSliceArray = sliceArray
 
 --[=[
 	Clones the table, and recursively clones nested tables.
@@ -219,6 +244,7 @@ local function intersect(tbl1: { [any]: any }, tbl2: { [any]: any }): { [any]: a
 	return result
 end
 module.intersect = intersect
+module.immutIntersect = immut(intersect)
 
 --[=[
 	Returns a new array containing the elements that are present in both `tbl1` and `tbl2`.
@@ -233,6 +259,7 @@ local function intersectArrays(tbl1: { any }, tbl2: { any }): { any }
 	return result
 end
 module.intersectArrays = intersectArrays
+module.immutIntersectArrays = immut(intersectArrays)
 
 --[=[
 	Returns whether the two tables have the same fields and values. Compares nested tables by reference.
@@ -269,6 +296,7 @@ local function mergeArrays<T>(...: { T }): { T }
 	return result
 end
 module.mergeArrays = mergeArrays
+module.immutMergeArrays = immut(mergeArrays)
 
 --[=[
 	Applies each entry in each passed table to a new table, in the order they were passed.
@@ -283,6 +311,7 @@ local function mergeTables(...: { [any]: any }): { [any]: any }
 	return result
 end
 module.merge = mergeTables
+module.immutMerge = immut(mergeTables)
 
 --[=[
 	Returns a random value from the array.
@@ -319,6 +348,7 @@ local function sampleArray<T>(tbl: { T }, count: number, randomFn: RandomFn?): {
 	return sample
 end
 module.sampleArray = sampleArray
+module.immutSampleArray = immut(sampleArray)
 
 --[=[
 	Returns the first key of the dictionary that has the passed value, or nil if none are found.
@@ -365,6 +395,18 @@ end
 module.reverseArray = reverseArray
 
 --[=[
+	Returns a new table which has the values of `tbl` in reverse order.
+]=]
+local function immutReverseArray<T>(tbl: { T }): { T }
+	local result = table.create(#tbl)
+	for i = #tbl, 1, -1 do
+		table.insert(result, tbl[i])
+	end
+	return table.freeze(result)
+end
+module.immutReverseArray = immutReverseArray
+
+--[=[
 	Fills in the fields missing in `tbl` with the fields in `template`.
 ]=]
 local function reconcile<T, U>(tbl: T, template: U): T & U
@@ -380,6 +422,23 @@ end
 module.reconcile = reconcile
 
 --[=[
+	Returns a new table which has the fields missing in `tbl` filled in with the fields in `template`.
+]=]
+local function immutReconcile<T, U>(tbl: T, template: U): T & U
+	assert(type(tbl) == "table", "tbl must be a table")
+	assert(type(template) == "table", "template must be a table")
+	local clone: any = table.clone(tbl)
+	for k, v in template :: any do
+		if not clone[k] then
+			clone[k] = v
+		end
+	end
+	table.freeze(clone)
+	return clone
+end
+module.immutReconcile = immutReconcile
+
+--[=[
 	Returns a new table which has the values of `tbl` as keys and `true` as values.
 ]=]
 local function toSet<T>(tbl: { T }): { [T]: boolean }
@@ -390,6 +449,7 @@ local function toSet<T>(tbl: { T }): { [T]: boolean }
 	return set
 end
 module.toSet = toSet
+module.immutToSet = immut(toSet)
 
 --[=[
 	Flattens an array of arrays into a single array.
@@ -408,6 +468,7 @@ local function flattenArray<T>(tbl: { { T } }): { T }
 	return flattened
 end
 module.flattenArray = flattenArray
+module.immutFlattenArray = immut(flattenArray)
 
 --[=[
 	Maps each element of the array to `fn`, and then flattens the resulting arrays into a single array.
@@ -416,6 +477,29 @@ local function flatMapArray<T, U>(tbl: { T }, fn: (value: T, index: number) -> {
 	return flattenArray(mapArray(tbl, fn))
 end
 module.flatMapArray = flatMapArray
+module.immutFlatMapArray = immut(flatMapArray)
+
+--[=[
+	Creates an immutable copy of the table with the key set to the value.
+]=]
+local function immutSet<K, V>(tbl: { [K]: V }, key: K, value: V): { [K]: V }
+	local clone = table.clone(tbl)
+	clone[key] = value
+	table.freeze(clone)
+	return clone
+end
+module.immutSet = immutSet
+
+--[=[
+	Creates an immutable copy of the table with the value inserted at the index via table.insert.
+]=]
+local function immutInsertArray<T>(tbl: { T }, index: number, value: T): { T }
+	local clone = table.clone(tbl)
+	table.insert(clone, index, value)
+	table.freeze(clone)
+	return clone
+end
+module.immutInsertArray = immutInsertArray
 
 -- stylua: ignore
 local zipTables:
@@ -462,6 +546,6 @@ end :: any
 --[=[
 	Returns an iterator function which returns the values of each shared key in the passed tables.
 ]=]
-module.zipTables = zipTables
+module.zip = zipTables
 
 return module
