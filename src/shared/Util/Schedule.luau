@@ -244,7 +244,7 @@ function Schedule.parallel<T...>(parameters: {
 			if not result.success then
 				local scriptName, line = debug.info(job, "sl")
 				error(`Failed to run scheduled function defined in {scriptName}:{line}: {result.error}`)
-			elseif result.yielded then
+			elseif disallowYield and result.yielded then
 				local scriptName, line = debug.info(job, "sl")
 				error(`Failed to run scheduled function defined in {scriptName}:{line}: Job yielded`)
 			end
