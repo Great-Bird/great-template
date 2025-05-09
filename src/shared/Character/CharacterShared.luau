@@ -3,10 +3,10 @@ local Players = game:GetService("Players")
 export type Instances = {
 	animator: Animator,
 	character: Model,
-	head: Part,
+	head: BasePart,
 	humanoid: Humanoid,
 	player: Player,
-	rootPart: Part,
+	rootPart: BasePart,
 }
 
 local module = {}

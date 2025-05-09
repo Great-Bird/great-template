@@ -16,13 +16,13 @@ local module = {
 
 local function waitForInstances(character: Model, player: Player): CharacterShared.Instances
 	local rootPart = character:WaitForChild("HumanoidRootPart")
-	assert(rootPart:IsA("Part"), "Character must have a HumanoidRootPart as its PrimaryPart")
+	assert(rootPart:IsA("BasePart"), "Character must have a HumanoidRootPart as its PrimaryPart")
 	local humanoid = character:WaitForChild("Humanoid")
 	assert(humanoid:IsA("Humanoid"), "Character must have a Humanoid")
 	local animator = humanoid:WaitForChild("Animator")
 	assert(animator:IsA("Animator"), "Character must have an Animator")
 	local head = character:WaitForChild("Head")
-	assert(head:IsA("Part"), "Character must have a Head Part")
+	assert(head:IsA("BasePart"), "Character must have a Head BasePart")
 
 	return {
 		animator = animator,
