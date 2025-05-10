@@ -1,8 +1,8 @@
 --[[
-	AssertInstance v0.1.0
+	AssertInstance v0.1.1
 	Author: Great_Bird
 	Date: 2025-02-12
-	Last updated: 2025-02-12
+	Last updated: 2025-05-10
 
 	Library for asserting instance properties in Roblox and automatically
 	writing high-quality error messages.
@@ -18,9 +18,14 @@
 	```
 
 	Changelog:
+	v0.1.1 (2025-05-10)
+	- Additions:
+		- Added support for providing a dictionary of values to check against in `hasAttribute`.
 	v0.1.0 (2025-02-12)
 	- Notes: Release
 ]]
+
+local MAX_STRING_LIST_SIZE = 10
 
 --[=[
 	Returns "a (thing)" or "an (object)" based on the first letter of the input string.
@@ -56,10 +61,40 @@ local function oneOf(
 	end
 end
 
-local function tostringAll(values: { any }): { string }
+local function smartToString(value: any): string
+	if type(value) == "string" then
+		return `"{value}"`
+	else
+		return tostring(value)
+	end
+end
+
+local function countEntries(tbl: { [any]: any }): number
+	local count = 0
+	for _ in tbl do
+		count += 1
+	end
+	return count
+end
+
+local function tostringAll(values: { any } | { [any]: any }): { string }
 	local strings = {}
-	for i, value in values do
-		strings[i] = tostring(value)
+	if type((next(values))) == "number" then
+		for i, value in ipairs(values) do
+			strings[i] = smartToString(value)
+			if #strings >= MAX_STRING_LIST_SIZE - 1 then
+				table.insert(strings, `({#values - (MAX_STRING_LIST_SIZE - 1)} more...)`)
+				break
+			end
+		end
+	else
+		for value in pairs(values) do
+			table.insert(strings, smartToString(value))
+			if #strings >= MAX_STRING_LIST_SIZE - 1 then
+				table.insert(strings, `({countEntries(values) - (MAX_STRING_LIST_SIZE - 1)} more...)`)
+				break
+			end
+		end
 	end
 	return strings
 end
@@ -93,7 +128,8 @@ local function hasChild(parent: Instance, childName: string, childClass: string?
 			" which is one of the classes: %s",
 			" which is a %s",
 			splitValues(childClass)
-		)}`
+		)}`,
+		3
 	)
 end
 
@@ -237,9 +273,7 @@ function module.hasTag(instance: Instance, tagName: string)
 			return tag
 		end
 	end
-	error(`{instance:GetFullName()} must have{
-		oneOf(" one of the tags: %s", " the tag %s", tags)
-	}`)
+	error(`{instance:GetFullName()} must have{oneOf(" one of the tags: %s", " the tag %s", tags)}`, 2)
 end
 
 --[=[
@@ -248,8 +282,10 @@ end
 	The `expectedType` parameter can be a single type or a list of types separated by "|", e.g. "string|number".
 	If not specified, does not check the attribute's type.
 
-	The `expectedValue` parameter can be a single value or a list of values. If a list of values is provided,
-	the attribute value must be one of the values in the list.
+	The `expectedValue` parameter can be a single value or a table.
+	If an array of values is provided, the attribute value must be one of the values in the list.
+	If a dictionary of values is passed, the attribute value must be one of the keys in the dictionary.
+
 	When nil is passed for `expectedValue`, the check is not performed. If you want to check for nil, pass "nil" to the
 	`expectedType` parameter instead.
 
@@ -259,12 +295,11 @@ end
 	@param expectedValue The value of the attribute to check for. Pass nil to not check the value, or pass a table of values to check against.
 	@return The value of the attribute.
 ]=]
--- TODO: Allow expectedValue to be a dictionary of values
 function module.hasAttribute(
 	instance: Instance,
 	attributeName: string,
 	expectedType: string?,
-	expectedValue: (any | { any })?
+	expectedValue: (any | { any } | { [any]: any })?
 ): any
 	local value = instance:GetAttribute(attributeName)
 
@@ -286,7 +321,7 @@ function module.hasAttribute(
 				if type(expectedValue) == "table" then oneOf("which must have one of the values: %s; ", "which must have the value %s; ", tostringAll(expectedValue))
 				elseif expectedValue ~= nil then `which must have the value {expectedValue}; `
 				else ""
-			}got {value} ({valueType})`)
+			}got {value} ({valueType})`, 2)
 		end
 	end
 
@@ -294,14 +329,17 @@ function module.hasAttribute(
 		local valid = false
 		if expectedType and string.find(expectedType, "nil") and value == nil then
 			valid = true
-		elseif type(expectedValue) == "table" then
+		elseif type(expectedValue) == "table" and next(expectedValue) ~= nil then
 			if #expectedValue == 0 then
-				error("expectedValue cannot be an empty table")
-			end
-			for _, expectedValue in expectedValue :: { any } do
-				if value == expectedValue then
+				if (expectedValue :: { [any]: any })[value] ~= nil then
 					valid = true
-					break
+				end
+			else
+				for _, arrayValue in ipairs(expectedValue :: { any }) do
+					if value == arrayValue then
+						valid = true
+						break
+					end
 				end
 			end
 		else
@@ -312,9 +350,9 @@ function module.hasAttribute(
 			-- stylua: ignore
 			error(`{instance:GetFullName()} must have an attribute named "{attributeName}" {
 				oneOf("of one of the types: %s; and ", "of type %s and ", splitValues(expectedType))
-			} with {
+			}with {
 				oneOf("one of the values: %s", "the value %s", tostringAll(expectedValue))	
-			}; got {value}`)
+			}; got {value}`, 2)
 		end
 	end
 

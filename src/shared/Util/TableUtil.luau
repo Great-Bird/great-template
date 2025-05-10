@@ -1,12 +1,15 @@
 --[[
-	TableUtil v0.1.1
+	TableUtil v0.1.2
 	Author: Great_Bird
 	Date: 2025-02-12
-	Last updated: 2025-02-12
+	Last updated: 2025-05-10
 
 	Table utilities for Luau.
 
 	Changelog:
+	v0.1.2 (2025-05-10)
+	- Added:
+		- `hasHoles`, `hasNonIntegerKeys`, `hasIntegerKeys`, `isEmpty`, `isArray`, `isArrayWithHoles`, `isDict`, `isMixed`
 	v0.1.1 (2025-03-13)
 	- Added many immutable functions, prefixed with `immut`.
 	v0.1.0 (2025-02-12)
@@ -547,5 +550,71 @@ end :: any
 	Returns an iterator function which returns the values of each shared key in the passed tables.
 ]=]
 module.zip = zipTables
+
+--[=[
+	Returns whether the passed table has holes in its numerical indexes.
+	Does not check whether the passed table is an array.
+]=]
+local function hasHoles(tbl: { [any]: any }): boolean
+	return #tbl ~= table.maxn(tbl)
+end
+module.hasHoles = hasHoles
+
+--[=[
+	Returns whether the passed table has non-integer keys.
+]=]
+local function hasNonIntegerKeys(tbl: { [any]: any }): boolean
+	return next(tbl, table.maxn(tbl)) ~= nil
+end
+module.hasNonIntegerKeys = hasNonIntegerKeys
+
+local function hasIntegerKeys(tbl: { [any]: any }): boolean
+	return next(tbl) == 1
+end
+module.hasIntegerKeys = hasIntegerKeys
+
+--[=[
+	Returns whether the passed table is empty.
+]=]
+local function isEmpty(tbl: { [any]: any }): boolean
+	return next(tbl) == nil
+end
+module.isEmpty = isEmpty
+
+--[=[
+	Returns whether the passed table is an array.
+	An array is defined as a table with ONLY integer keys starting at 1, and no holes.
+]=]
+local function isArray(tbl: { [any]: any }): boolean
+	return hasIntegerKeys(tbl) and not hasNonIntegerKeys(tbl) and not hasHoles(tbl)
+end
+module.isArray = isArray
+
+--[=[
+	Returns whether the passed table is an array with holes.
+	An array with holes is defined as a table with ONLY integer keys starting at 1, and holes.
+]=]
+local function isArrayWithHoles(tbl: { [any]: any }): boolean
+	return hasIntegerKeys(tbl) and hasNonIntegerKeys(tbl) and hasHoles(tbl)
+end
+module.isArrayWithHoles = isArrayWithHoles
+
+--[=[
+	Returns whether the passed table is a dictionary.
+	A dictionary is defined as a table with non-integer keys, or integer keys starting at 1 but with holes.
+]=]
+local function isDict(tbl: { [any]: any }): boolean
+	return hasNonIntegerKeys(tbl) and (not hasIntegerKeys(tbl) or hasHoles(tbl))
+end
+module.isDict = isDict
+
+--[=[
+	Returns whether the passed table is a mixed table.
+	A mixed table is defined as a table with both integer and non-integer keys.
+]=]
+local function isMixed(tbl: { [any]: any }): boolean
+	return hasIntegerKeys(tbl) and hasNonIntegerKeys(tbl)
+end
+module.isMixed = isMixed
 
 return module

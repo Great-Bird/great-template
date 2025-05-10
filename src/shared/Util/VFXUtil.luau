@@ -1,12 +1,15 @@
 --[[
-	VFXUtil v0.2.0
+	VFXUtil v0.2.1
 	Author: Great_Bird
 	Date: 2024-09-21
-	Last updated: 2025-02-12
+	Last updated: 2025-05-10
 
 	Utilities for creating visual effects in Roblox.
 
 	Changelog:
+	v0.2.1 (2025-05-10)
+	- Added:
+		- `VFXUtil.enableVFX` function to enable ParticleEmitters, Beams, Decals, and Lights.
 	v0.2.0 (2025-02-12)
 	- Breaking:
 		- Removed `VFXUtil.lerp` in favor of `math.lerp`.
@@ -185,6 +188,24 @@ function module.getMaxParticleLifetime(root: PVInstance): number
 	end
 
 	return maxLifetime
+end
+
+--[=[
+	Enables ParticleEmitters, Beams, Decals, and Lights inside the passed instance.
+	Useful for starting a continued effect.
+]=]
+function module.enableVFX(root: PVInstance)
+	for _, descendant in root:GetDescendants() do
+		if descendant:IsA("ParticleEmitter") then
+			descendant.Enabled = true
+		elseif descendant:IsA("Beam") then
+			descendant.Enabled = true
+		elseif descendant:IsA("Light") then
+			descendant.Enabled = true
+		elseif descendant:IsA("Decal") then
+			descendant.Transparency = 0
+		end
+	end
 end
 
 --[=[
