@@ -16,3 +16,8 @@
 
 # Luau LSP type definitions for Roblox
 globalTypes.d.luau
+
+# Pesde package files
+/luau_packages
+/lune_packages
+/roblox_packages

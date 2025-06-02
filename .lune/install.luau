@@ -39,24 +39,14 @@ local s = stdio.style
 if table.find(process.args, "help") then
 	print("Installs packages using wally.")
 	print()
-	print(`{s("bold")}Usage: {c("yellow")}lune{c("reset")} run{s("reset")} install [help] [test]`)
+	print(`{s("bold")}Usage: {c("yellow")}lune{c("reset")} run{s("reset")} install [help]`)
 	print()
 	print(`{s("bold")}Options:`)
 	print(`  {s("bold")}help{s("reset")}  Display this help message and exit`)
-	print(`  {s("bold")}test{s("reset")}  Also install the testing packages`)
 
 	process.exit(0)
 end
 
-local installTestPackages = table.find(process.args, "test") ~= nil
-
-local projectFilePath = if installTestPackages then Config.testProjectFilePath else Config.projectFilePath
-
 DevSetupTasks.installPackages()
-if installTestPackages then
-	DevSetupTasks.installPackages("test")
-end
-DevSetupTasks.createMissingPackageDirectories()
-DevSetupTasks.createSourcemap(projectFilePath)
-DevSetupTasks.reexportPackageTypes(installTestPackages)
+DevSetupTasks.createSourcemap(Config.projectFilePath)
 ProcessUtil.printAllCompleted()

@@ -47,18 +47,13 @@ end
 local DevSetupTasks = require("modules/dev-setup-tasks")
 local ProcessUtil = require("modules/process-util")
 
-local installTestPackages = table.find(process.args, "test") ~= nil
-local buildPath = if installTestPackages then Config.testBuildFilePath else Config.buildFilePath
-local projectFilePath = if installTestPackages then Config.testProjectFilePath else Config.projectFilePath
+local setupTestProject = table.find(process.args, "test") ~= nil
+local buildPath = if setupTestProject then Config.testBuildFilePath else Config.buildFilePath
+local projectFilePath = if setupTestProject then Config.testProjectFilePath else Config.projectFilePath
 
 DevSetupTasks.fetchTypeDefinitions()
 DevSetupTasks.installPackages()
-if installTestPackages then
-	DevSetupTasks.installPackages("test")
-end
-DevSetupTasks.createMissingPackageDirectories()
 DevSetupTasks.createSourcemap(projectFilePath)
-DevSetupTasks.reexportPackageTypes(installTestPackages)
 local shouldImport = table.find(process.args, "import")
 if shouldImport then
 	DevSetupTasks.fetchPlace(buildPath)

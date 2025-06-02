@@ -71,10 +71,7 @@ end
 if table.find(process.args, "import") then
 	DevSetupTasks.fetchTypeDefinitions()
 	DevSetupTasks.installPackages()
-	DevSetupTasks.installPackages("test")
-	DevSetupTasks.createMissingPackageDirectories()
 	DevSetupTasks.createSourcemap(TEST_PROJECT_PATH)
-	DevSetupTasks.reexportPackageTypes(true)
 	DevSetupTasks.fetchPlace(BUILD_FILE_PATH)
 end
 

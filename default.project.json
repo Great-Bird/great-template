@@ -10,7 +10,7 @@
       },
       "Packages": {
         "$ignoreUnknownInstances": false,
-        "$path": "Packages"
+        "$path": "roblox_packages"
       },
       "Shared": {
         "$ignoreUnknownInstances": false,
@@ -21,10 +21,6 @@
       "Server": {
         "$ignoreUnknownInstances": false,
         "$path": "src/Server"
-      },
-      "ServerPackages": {
-        "$ignoreUnknownInstances": false,
-        "$path": "ServerPackages"
       }
     },
     "$ignoreUnknownInstances": true

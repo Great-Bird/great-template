@@ -33,6 +33,7 @@ local Config = require("config")
 local DEFINITIONS_PATH: string = Config.typeDefinitionsFilePath -- Global type definition file
 local IGNORE_PATHS: { string }? = {
 	"**/_Index/**", -- Ignore packages
+	"**/luau_packages/**", "**/lune_packages/**", "**/roblox_packages/**", -- Ignore pesde packages
 }
 local LUAU_RC_PATH: string? = ".luaurc" -- Optional luaurc file
 local SETTINGS_PATH: string? = ".vscode/settings.json" -- Optional VSCode settings file
