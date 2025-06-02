@@ -1,8 +1,8 @@
 --[[
-	Jest Test Script v0.1.0
+	Jest Test Script v0.2.0
 	Author: Great_Bird
 	Date: 2025-02-17
-	Last edited: 2025-02-17
+	Last edited: 2025-06-01
 
 	Run `lune run test help` for usage instructions.
 
@@ -11,8 +11,7 @@
 
 	You will need some tools installed to use this script. They can be found here:
 	* Lune: https://github.com/lune-org/lune
-	* Wally: https://github.com/UpliftGames/wally
-	* wally-package-types: https://github.com/JohnnyMorganz/wally-package-types/blob/master/Cargo.toml
+	* Pesde: https://github.com/pesde-pkg/pesde
 	* Rojo: https://github.com/rojo-rbx/rojo
 	* run-in-roblox: https://github.com/rojo-rbx/run-in-roblox
 	Place this file into a `.lune` directory in the root of your project to use it.
@@ -21,6 +20,9 @@
 	Constant variables are provided for easy configuration; see `config.luau`.
 
 	Changelog:
+	v0.2.0 (2025-06-01)
+	- Changes:
+		- Updated to use pesde for package management instead of wally
 	v0.1.1 (2025-02-17)
 	- Changes:
 		- Added file info, docs, and help message

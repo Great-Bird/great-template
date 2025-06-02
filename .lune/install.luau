@@ -1,17 +1,16 @@
 --[[
-	Install Script v0.1.1
+	Install Script v0.2.0
 	Author: Great_Bird
 	Date: 2025-02-12
-	Last edited: 2025-02-17
+	Last edited: 2025-06-01
 
 	Run `lune run install help` for usage instructions.
 
-	Script which installs packages using wally.
+	Script which installs packages using pesde.
 
 	You will need some tools installed to use this script. They can be found here:
 	* Lune: https://github.com/lune-org/lune
-	* Wally: https://github.com/UpliftGames/wally
-	* wally-package-types: https://github.com/JohnnyMorganz/wally-package-types/blob/master/Cargo.toml
+	* Pesde: https://github.com/pesde-pkg/pesde
 	* Rojo: https://github.com/rojo-rbx/rojo
 	Place this file into a `.lune` directory in the root of your project to use it.
 	
@@ -19,6 +18,11 @@
 	Constant variables are provided for easy configuration; see `config.luau`.
 
 	Changelog:
+	v0.2.0 (2025-06-01)
+	- Changes:
+		- Updated to use pesde for package management instead of wally
+	- Removed:
+		- `test` option, as it is no longer needed.
 	v0.1.1 (2025-02-17)
 	- Changes:
 		- Added file info, docs, and help message
@@ -37,7 +41,7 @@ local c = stdio.color
 local s = stdio.style
 
 if table.find(process.args, "help") then
-	print("Installs packages using wally.")
+	print("Installs packages using pesde.")
 	print()
 	print(`{s("bold")}Usage: {c("yellow")}lune{c("reset")} run{s("reset")} install [help]`)
 	print()

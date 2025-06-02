@@ -1,8 +1,8 @@
 --[[
-	Analyze Script v0.1.1
+	Analyze Script v0.1.2
 	Author: Great_Bird
 	Date: 2024-09-23
-	Last edited: 2025-02-12
+	Last edited: 2025-06-01
 
 	Run `lune run analyze help` for usage instructions.
 
@@ -17,6 +17,8 @@
 	Constant variables are provided for easy configuration; see `config.luau`.
 
 	Changelog:
+	v0.1.2 (2025-06-01)
+	- Added pesde package ignore paths
 	v0.1.1 (2025-02-12)
 	- Updated to use Config module
 	- Added file information
