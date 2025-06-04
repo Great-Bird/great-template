@@ -1,8 +1,8 @@
 --[[
-	AssertInstance v0.1.1
+	AssertInstance v0.1.2
 	Author: Great_Bird
 	Date: 2025-02-12
-	Last updated: 2025-05-10
+	Last updated: 2025-06-04
 
 	Library for asserting instance properties in Roblox and automatically
 	writing high-quality error messages.
@@ -18,6 +18,8 @@
 	```
 
 	Changelog:
+	v0.1.2 (2025-06-04)
+	- Update error messages
 	v0.1.1 (2025-05-10)
 	- Additions:
 		- Added support for providing a dictionary of values to check against in `hasAttribute`.
@@ -321,7 +323,7 @@ function module.hasAttribute(
 				if type(expectedValue) == "table" then oneOf("which must have one of the values: %s; ", "which must have the value %s; ", tostringAll(expectedValue))
 				elseif expectedValue ~= nil then `which must have the value {expectedValue}; `
 				else ""
-			}got {value} ({valueType})`, 2)
+			}got {smartToString(value)} ({valueType})`, 2)
 		end
 	end
 
@@ -352,7 +354,7 @@ function module.hasAttribute(
 				oneOf("of one of the types: %s; and ", "of type %s and ", splitValues(expectedType))
 			}with {
 				oneOf("one of the values: %s", "the value %s", tostringAll(expectedValue))	
-			}; got {value}`, 2)
+			}; got {smartToString(value)}`, 2)
 		end
 	end
 
