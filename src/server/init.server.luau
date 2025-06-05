@@ -18,11 +18,11 @@ end)
 RunService.PreSimulation:Connect(SchedulesServer.preSimulation.startNoYield)
 RunService.PostSimulation:Connect(SchedulesServer.postSimulation.startNoYield)
 
+CharacterService.characterLoaded:Connect(SchedulesServer.loadCharacter.startNoYield)
+CharacterService.characterUnloading:Connect(SchedulesServer.unloadCharacter.startNoYield)
+
 for _, player in Players:GetPlayers() do
 	SchedulesServer.loadPlayer.startNoYield(player)
 end
 Players.PlayerAdded:Connect(SchedulesServer.loadPlayer.startNoYield)
 Players.PlayerRemoving:Connect(SchedulesServer.unloadPlayer.startNoYield)
-
-CharacterService.characterLoaded:Connect(SchedulesServer.loadCharacter.startNoYield)
-CharacterService.characterUnloading:Connect(SchedulesServer.unloadCharacter.startNoYield)
