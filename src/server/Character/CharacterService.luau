@@ -98,7 +98,7 @@ module.loadPlayerJob = SchedulesServer.loadPlayer.job(function(player)
 	end
 
 	if player.Character then
-		onCharacterAdded(player.Character)
+		task.spawn(onCharacterAdded, player.Character)
 	end
 	local janitor = Janitor.new()
 	janitor:Add(player.CharacterAdded:Connect(onCharacterAdded))
