@@ -13,6 +13,7 @@
 /Packages
 /ServerPackages
 /DevPackages
+/test/DevPackages
 
 # Luau LSP type definitions for Roblox
 globalTypes.d.luau
