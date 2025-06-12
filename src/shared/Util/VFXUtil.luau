@@ -1,12 +1,17 @@
 --[[
-	VFXUtil v0.2.1
+	VFXUtil v0.3.0
 	Author: Great_Bird
 	Date: 2024-09-21
-	Last updated: 2025-05-10
+	Last updated: 2025-06-11
 
 	Utilities for creating visual effects in Roblox.
 
 	Changelog:
+	v0.3.0 (2025-06-11)
+	- Breaking:
+		- `VFXUtil.emitParticles` renamed to `VFXUtil.emitClone`.
+	- Added:
+		- `VFXtil.emit` function to emit particles from an existing instance.
 	v0.2.1 (2025-05-10)
 	- Added:
 		- `VFXUtil.enableVFX` function to enable ParticleEmitters, Beams, Decals, and Lights.
@@ -194,7 +199,7 @@ end
 	Enables ParticleEmitters, Beams, Decals, and Lights inside the passed instance.
 	Useful for starting a continued effect.
 ]=]
-function module.enableVFX(root: PVInstance)
+function module.enable(root: PVInstance)
 	for _, descendant in root:GetDescendants() do
 		if descendant:IsA("ParticleEmitter") then
 			descendant.Enabled = true
@@ -213,7 +218,7 @@ end
 	Useful for stopping an effect without removing existing particles.
 	Returns the max particle lifetime for the effect, similarly to `VFXUtil.getMaxParticleLifetime`.
 ]=]
-function module.disableVFX(root: PVInstance): number
+function module.disable(root: PVInstance): number
 	local maxLifetime = 0
 	for _, descendant in root:GetDescendants() do
 		if descendant:IsA("ParticleEmitter") then
@@ -236,7 +241,7 @@ end
 	the cloned instance. If you cancel the thread, the onus is on you to call `onFinished` and
 	destroy the instance.
 ]=]
-function module.emitParticles(
+function module.emitClone(
 	root: PVInstance,
 	cframe: CFrame,
 	onFinished: (lifetime: number) -> ()?
@@ -276,6 +281,39 @@ function module.emitParticles(
 	end
 
 	return vfx, task.delay(maxLifetime, finish)
+end
+
+function module.emit(root: Instance, onFinished: (lifetime: number) -> ()?)
+	local maxLifetime = 0
+
+	local function finish()
+		if onFinished then
+			onFinished(maxLifetime)
+		end
+	end
+
+	for _, descendant in root:GetDescendants() do
+		if descendant:IsA("ParticleEmitter") then
+			maxLifetime = math.max(maxLifetime, descendant.Lifetime.Max)
+
+			local emitCount = tonumber(descendant:GetAttribute("EmitCount"))
+			local emitDelay = tonumber(descendant:GetAttribute("EmitDelay"))
+			if not emitCount then
+				continue
+			end
+
+			if emitDelay then
+				maxLifetime = math.max(maxLifetime, descendant.Lifetime.Max + emitDelay)
+				task.delay(emitDelay, function()
+					descendant:Emit(emitCount)
+				end)
+			else
+				descendant:Emit(emitCount)
+			end
+		end
+	end
+
+	return task.delay(maxLifetime, finish)
 end
 
 return module

@@ -19,7 +19,7 @@
 
 	Changelog:
 	v0.1.2 (2025-06-04)
-	- Update error messages
+	- Fix error message
 	v0.1.1 (2025-05-10)
 	- Additions:
 		- Added support for providing a dictionary of values to check against in `hasAttribute`.

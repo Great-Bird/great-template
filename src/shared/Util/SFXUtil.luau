@@ -1,8 +1,8 @@
 --[[
-	SFXUtil v0.2.0
+	SFXUtil v0.3.0
 	Author: Great_Bird
 	Date: 2024-09-21
-	Last updated: 2025-02-12
+	Last updated: 2025-06-11
 
 	Utilities for playing sound effects and music in Roblox.
 
@@ -57,6 +57,13 @@
 	```
 
 	Changelog:
+	v0.3.0 (2025-06-11)
+	- Breaking:
+		- Changed `SFXConfig.PlaybackSpeed` to `SFXConfig.playbackSpeed`.
+	- Added:
+		- `SFXUtil.playSoundAtPosition` to play a sound at a specific position in the world.
+	- Changes:
+		- Added 
 	v0.2.0 (2025-02-12)
 	- Breaking:
 		- Made all SFXConfig and MusicConfig properties camelCase.
@@ -92,7 +99,7 @@ local module = {
 	
 	.playbackSpeedRandomnessFactor number?
 	If set, multiplies the playback speed by a random number between this value and its reciprocal.
-	For example, if set to 2, will multiply the sound's PlaybackSpeed by random(0.5, 2).
+	For example, if set to 2, will multiply the sound's playbackSpeed by random(0.5, 2).
 	This is useful for adding some variance to a rapidly repeated sound.
 
 	.volumeRandomnessFactor number?
@@ -121,7 +128,7 @@ local module = {
 	
 	.rollOffMinDistance number?,
 	.rollOffMaxDistance number?,
-	.PlaybackSpeed number?,
+	.playbackSpeed number?,
 	.volume number?,
 	.looped boolean?,
 	.timePosition number?,
@@ -138,7 +145,7 @@ export type SFXConfig = {
 
 	rollOffMinDistance: number?,
 	rollOffMaxDistance: number?,
-	PlaybackSpeed: number?,
+	playbackSpeed: number?,
 	volume: number?,
 	looped: boolean?,
 	timePosition: number?,
@@ -203,8 +210,8 @@ local function applyConfig(sound: Sound, config: SFXConfig)
 	if config.volume then
 		sound.Volume = config.volume
 	end
-	if config.PlaybackSpeed then
-		sound.PlaybackSpeed = config.PlaybackSpeed
+	if config.playbackSpeed then
+		sound.PlaybackSpeed = config.playbackSpeed
 	end
 	if config.looped then
 		sound.Looped = config.looped
@@ -244,18 +251,20 @@ local function playSound(sound: Sound, config: SFXConfig?)
 	end
 end
 
+local function onSoundStoppedPlaying(sound: Sound, callback: () -> ())
+	sound.Stopped:Once(callback)
+	sound.Ended:Once(callback)
+	sound.Paused:Once(callback)
+end
+
 local function createDisposableClone(sound: Sound, config: SFXConfig)
 	local clone = sound:Clone()
 
 	if not config.preserveWhenDone then
 		-- Destroy the sound when not in use
-		local function destroySound()
+		onSoundStoppedPlaying(clone, function()
 			clone:Destroy()
-		end
-
-		clone.Stopped:Once(destroySound)
-		clone.Ended:Once(destroySound)
-		clone.Paused:Once(destroySound)
+		end)
 	end
 
 	return clone
@@ -295,6 +304,30 @@ function module.playSound(sound: Sound, config: SFXConfig?, parent: Instance?): 
 	playSound(sound, config)
 
 	return sound
+end
+
+function module.playSoundAtPosition(sound: Sound, cframe: CFrame, size: Vector3?, config: SFXConfig?): (Sound, BasePart)
+	local soundLocation = Instance.new("Part")
+	soundLocation.Anchored = true
+	soundLocation.Name = "SoundPart"
+	soundLocation.CFrame = cframe
+	soundLocation.Size = Vector3.zero
+	soundLocation.CanCollide = false
+	soundLocation.CanQuery = false
+	soundLocation.CanTouch = false
+	soundLocation.Transparency = 1
+	if size then
+		soundLocation.Size = size
+	end
+	soundLocation.Parent = workspace
+
+	module.playSound(sound, config, soundLocation)
+
+	onSoundStoppedPlaying(sound, function()
+		soundLocation:Destroy()
+	end)
+
+	return sound, soundLocation
 end
 
 local function fadeOutMusic(sound: Sound, config: MusicConfig)

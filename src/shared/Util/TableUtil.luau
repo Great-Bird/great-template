@@ -303,10 +303,11 @@ module.immutMergeArrays = immut(mergeArrays)
 
 --[=[
 	Applies each entry in each passed table to a new table, in the order they were passed.
+	The first table is cloned, and the entries of the other tables are applied to it.
 ]=]
 local function mergeTables(...: { [any]: any }): { [any]: any }
-	local result = {}
-	for _, tbl in { ... } do
+	local result = table.clone(select(1, ...) :: { [any]: any })
+	for _, tbl in { select(2, ...) } do
 		for k, v in tbl do
 			result[k] = v
 		end
@@ -496,12 +497,15 @@ module.immutSet = immutSet
 --[=[
 	Creates an immutable copy of the table with the value inserted at the index via table.insert.
 ]=]
-local function immutInsertArray<T>(tbl: { T }, index: number, value: T): { T }
+local immutInsertArray:
+	& (<T>(tbl: { T }, value: T) -> ({ T }))
+	& (<T>(tbl: { T }, index: number, value: T) -> ({ T }))
+immutInsertArray = function<T>(tbl: { T }, ...): { T }
 	local clone = table.clone(tbl)
-	table.insert(clone, index, value)
+	table.insert(clone, ...)
 	table.freeze(clone)
 	return clone
-end
+end :: any
 module.immutInsertArray = immutInsertArray
 
 -- stylua: ignore
