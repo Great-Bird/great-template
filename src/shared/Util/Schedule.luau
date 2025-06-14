@@ -270,6 +270,8 @@ function Schedule.parallel<T...>(parameters: {
 			local coro = coroutine.create(runJob)
 			local success, err = coroutine.resume(coro, job, ...)
 			if not success then
+				-- TODO: Make the error messages easier to read. They currently
+				-- include the entire stack trace for the job
 				error(`Failed to run scheduled function: {err}`)
 			end
 		end
