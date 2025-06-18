@@ -18,7 +18,7 @@ return function(scope: Fusion.Scope, elapsedTime: Fusion.StateObject<number>?)
 		local newElapsedTime = scope:Value(0)
 		elapsedTime_ = newElapsedTime
 
-		table.insert(scope, RunService.RenderStepped:Connect(function(dt)
+		table.insert(scope, RunService.PreRender:Connect(function(dt)
 			newElapsedTime:set(peek(newElapsedTime) + dt)
 		end))
 	else
