@@ -15,7 +15,6 @@ A great template to use for Roblox projects.
   - [List of Tools Used](#list-of-tools-used)
     - [Toolchain](#toolchain)
     - [Recommended VSCode Extensions](#recommended-vscode-extensions)
-      - [Recommended settings for Luau LSP](#recommended-settings-for-luau-lsp)
     - [Roblox Libraries](#roblox-libraries)
       - [Game Schedules](#game-schedules)
       - [Character Wrapper](#character-wrapper)
@@ -117,16 +116,17 @@ to use it in your project!
 Now let's say you're actually something of a performant network code fanatic, and
 you want to use [Squash](https://data-oriented-house.github.io/Squash/) to compress
 down the data you're sending to your clients even further. To do this, you can
-open `wally.toml`, and under the `[dependencies]` section, add
+open `pesde.toml`, and under the `[dependencies]` section, add
 ```toml
-Squash = "data-oriented-house/squash@VERSION"
+Squash = { wally = "data-oriented-house/squash", version = "VERSION" }
 ```
 where `VERSION` is the latest version of Squash (example: 2.5.0). After running
-```lua
+```bash
 lune run install
 ```
-Squash will be downloaded to the `Packages` folder, and now you're ready to blow
-the world away by building your crazy efficient networked multiplayer game!
+Squash will be downloaded to the `roblox_packages` folder, and now you're ready
+to blow the world away by building your crazy efficient networked multiplayer
+game!
 
 ### Final Setup
 
@@ -141,15 +141,10 @@ great@Birdnest MINGW64 ~/Documents/GitHub/great-template (main)
 $ lune run setup
 ✅ Downloaded global type definitions
 ✅ Installed packages
-✅ Added ServerPackages folder
-✅ Added DevPackages folder
 ✅ Created sourcemap
-✅ Re-exported package types
-✅ Re-exported server package types
-✅ Re-exported dev package types
 All tasks completed!
 The development environment has been set up!
-Open build.rbxlx in Roblox Studio and connect with the Rojo plugin to start developing.
+Warning: build.rbxlx does not exist. It's recommended to run with the 'import' flag to ensure the latest version of the main place is imported.
 🔄 Changes are syncing. Press Ctrl+C to stop.
 ```
 Follow the instructions, and now you're ready to make your game!
@@ -170,11 +165,11 @@ If you're curious about what each part of this project structure does, see
 ## List of Tools Used
 
 ### Toolchain
-- [`rojo`](https://rojo.space/docs/v7/): Syncs project source code to Roblox Studio, enabling the use of VSCode, Git, and other tools
+- [`rokit`](https://github.com/rojo-rbx/rokit): Toolchain manager which allows for quickly downloading and updating tools.
+- [`rojo`](https://rojo.space/docs/v7/): Syncs project source code to Roblox Studio, enabling the use of VSCode, Git, and other tools.
 - [`luau-lsp`](https://github.com/JohnnyMorganz/luau-lsp): CLI for Luau LSP, a language server for Luau. Mainly useful for setting FFlags and displaying type errors.
 - [`lune`](https://lune-org.github.io/docs): CLI for running Luau scripts in the terminal. This is required for many of the tools this project template provides. 
-- [`wally`](https://github.com/UpliftGames/wally): Package manager which makes it easy to automatically update Roblox packages and libraries used as dependencies of the project. We may decide to replace Wally with [Pesde](https://pesde.dev) in the future when it is more stable.
-- [`wally-package-types`](https://github.com/JohnnyMorganz/wally-package-types): Re-exports type definitions provided by Wally packages in linker files. This is helpful for using strict Luau typing.
+- [`pesde`](https://github.com/pesde-pkg/pesde): Package manager which makes it easy to automatically update Roblox packages and libraries used as dependencies of the project.
 - [`stylua`](https://github.com/JohnnyMorganz/StyLua): A CLI code formatter for Lua and Luau. This removes the need to format files manually.
 - [`selene`](https://kampfkarren.github.io/selene/selene.html): A linter for Lua and Luau. Displays warnings in code when you make common mistakes.
 
@@ -186,39 +181,6 @@ If you're curious about what each part of this project structure does, see
 - [StyLua](https://marketplace.visualstudio.com/items?itemName=JohnnyMorganz.stylua): Extension for StyLua which makes it easy to set up VSCode to format your code at the press of a keyboard shortcut.
 - [Indenticator](https://marketplace.visualstudio.com/items?itemName=SirTori.indenticator) (optional): Highlights your current indent level. If you're the kind of programmer who lives on the edge (of your text editor, because you have code which uses 15 indents), then you'll find this useful.
 - [Incredibly In Your Face](https://marketplace.visualstudio.com/items?itemName=VirejDasani.incredibly-in-your-face) (optional): Mr. Incredible will become more and more uncanny as you write more errors in your code. Very effective at motivating you to write less errors.
-
-#### Recommended settings for Luau LSP
-The extension for Luau LSP comes with many settings. Without too much
-commentary, here are some recommended settings to paste into your
-`settings.json` (which can be opened by typing "Open User Settings (JSON)" in
-the command palette):
-```json
-"luau-lsp.completion.autocompleteEnd": true,
-"luau-lsp.completion.imports.enabled": true,
-"luau-lsp.completion.imports.separateGroupsWithLine": true,
-"luau-lsp.hover.multilineFunctionDefinitions": true,
-"luau-lsp.inlayHints.typeHintMaxLength": 5000,
-"luau-lsp.fflags.override": {
-    "LuauAutocompleteDynamicLimits": "false",
-    "LuauAutocompleteTableKeysNoInitialCharacter": "true",
-    "LuauSolverV2": "false",
-    "LuauTarjanChildLimit": "150000",
-},
-"luau-lsp.inlayHints.functionReturnTypes": true,
-"luau-lsp.inlayHints.parameterTypes": true,
-"luau-lsp.inlayHints.variableTypes": true,
-"luau-lsp.plugin.maximumRequestBodySize": "10mb",
-"luau-lsp.ignoreGlobs": [
-    "**/_Index/**",
-    "**/_Index/../**",
-    "*.d.lua",
-    "*.d.luau"
-],
-"luau-lsp.fflags.enableByDefault": true,
-"luau-lsp.hover.showTableKinds": true,
-"luau-lsp.diagnostics.strictDatamodelTypes": true,
-"luau-lsp.plugin.enabled": true,
-```
 
 ### Roblox Libraries
 Some utility libraries which are helpful for Roblox development are installed
@@ -238,6 +200,7 @@ below:
 - AssertInstance: Validate that an Instance has the correct state, or display
   automatically-written, high-quality error messages in the output. Useful for
   using Roblox Studio as a level editor.
+- FusionUtil: Utility objects for Fusion.
 - Loader: Bootloader for modules. Supports match and ignore globs.
 - NumberUtil: Extra math functions and utilities for formatting numbers.
 - RandomPoint: Get uniformly random points inside of primitive parts.
@@ -264,6 +227,12 @@ below:
   collection made easy and ergonomic.
 - [sleitnick/Signal](https://sleitnick.github.io/RbxUtil/api/Signal/):
   Create your own events using an API that mirrors RBXScriptSignal.
+- [elttob/Fusion](https://elttob.uk/Fusion/0.3/): Luau companion library which
+  makes implementing UI, reacting to state changes, and creating animations a
+  breeze.
+- [pepeeltoro41/ui-labs](https://github.com/PepeElToro41/ui-labs): Allows you to
+  prototype UI with mock-up data in a controlled environment, and see UI code
+  and functionality updates in real time.
 
 ## Style Guide
 See [the page on the style guide](documentation/style-guide.md).

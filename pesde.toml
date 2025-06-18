@@ -5,10 +5,6 @@ private = true
 [target]
 environment = "roblox"
 
-[place]
-shared = "game.ReplicatedStorage.Packages"
-server = "game.ServerScriptService.Packages"
-
 [indices]
 default = "https://github.com/pesde-pkg/index"
 
