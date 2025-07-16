@@ -1,8 +1,8 @@
 --[[
-	ReactiveValue v0.1.0
+	ReactiveValue v0.3.0
 	Author: Great_Bird
 	Date: 2024-09-28
-	Last updated: 2025-02-12
+	Last updated: 2025-07-16
 
 	Note: Requires Signal as a dependency. https://sleitnick.github.io/RbxUtil/api/Signal/
 
@@ -49,6 +49,35 @@
 	print(actualValue == value.get()) -- false
 	```
 
+	The `checkChanged` parameter is run to determine if the value has changed. It should return true if the value has changed, false otherwise.
+	By default, it checks for deep equality of tables, and always returns true for frozen tables (even if nested).
+	You can use a simpler check if you don't need deep equality:
+	```lua
+		local function simpleCheckChanged(new, current)
+			return new ~= current
+		end
+
+		local function logChange(new, old)
+			print("Value changed from", old, "to", new)
+		end
+
+		local tableA = table.freeze {}
+		local tableB = table.freeze {}
+		local unfrozenTable = {}
+
+		-- You can also find a function like this at ReactiveValue.checkChangedSimple
+		local valueSimple = ReactiveValue.new(tableA, nil, simpleCheckChanged)
+		valueSimple.changed:Connect(logChange)
+		valueSimple.set(tableB) -- Value changed from {} to {}
+
+		local value = ReactiveValue.new(tableA, nil, ReactiveValue.checkChanged) -- This is the default checkChanged function
+		value.changed:Connect(logChange)
+		-- This does not result in the `changed` signal being fired
+		value.set(tableB)
+		-- But this does, because the table is unfrozen and could change later
+		value.set(unfrozenTable) -- Value changed from {} to {}
+	```
+
 	The `observe` method is shorthand for connecting to the `changed` signal and immediately calling the callback with the current and previous value:
 	```lua
 	local value = ReactiveValue.new("hello")
@@ -73,6 +102,16 @@
 	```
 
 	Changelog:
+	v0.3.0 (2025-07-16)
+	- Breaking:
+		- Renamed the `check` property of ReactiveValue to `checkValue`.
+		- ReactiveValue now uses the `checkValue` property instead of the function passed to the constructor.
+	- Added:
+		- checkChanged function that checks for deep equality of tables, and always returns true for frozen tables.
+		- checkChangedSimple function that checks for simple equality using `~=` operator.
+	- Changes:
+		- Allowed the user to pass checkChanged as a parameter to constructors.
+		- Added checkChanged as a property of ReactiveValue and DerivedReactiveValue.
 	v0.2.0 (2025-02-12)
 	- Changes:
 		- Moved documentation to top of file.
@@ -84,14 +123,49 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
+local function equal(a: any, b: any): boolean
+	if a == b then
+		return true
+	end
+	if type(a) ~= type(b) then
+		return false
+	end
+	if type(a) == "table" then
+		-- Non-frozen tables can change later, which would make them unequal.
+		if not table.isfrozen(a) or not table.isfrozen(b) then
+			return false
+		end
+
+		for key, value in a do
+			if not equal(b[key], value) then
+				return false
+			end
+		end
+
+		for key, value in b do
+			if not equal(a[key], value) then
+				return false
+			end
+		end
+
+		return true
+	end
+	return false
+end
+
 local DEFAULT_CHECK_VALUE_FUNCTION: CheckValueFunction<any> = function(value: any)
 	return value
 end
+local DEFAULT_CHECK_CHANGED_FUNCTION: CheckChangedFunction<any> = function(new: any, current: any): boolean
+	return not equal(new, current)
+end
 
 type CheckValueFunction<T> = (new: T, current: T, old: T) -> T
+type CheckChangedFunction<T> = (new: T, current: T) -> boolean
 export type ReactiveValue<T> = {
 	changed: Signal.Signal<T, T>,
-	check: CheckValueFunction<T>,
+	checkValue: CheckValueFunction<T>,
+	checkChanged: CheckChangedFunction<T>,
 	set: (new: T) -> T,
 	get: () -> (T, T),
 	getCurrent: () -> T,
@@ -100,6 +174,7 @@ export type ReactiveValue<T> = {
 }
 export type DerivedReactiveValue<T> = {
 	changed: Signal.Signal<T, T>,
+	checkChanged: CheckChangedFunction<T>,
 	get: () -> (T, T),
 	getCurrent: () -> T,
 	observe: (callback: (new: T, old: T) -> ()) -> Signal.Connection,
@@ -109,18 +184,49 @@ export type DerivedReactiveValue<T> = {
 local module = {}
 
 --[=[
+	@param new : `T` The new value being set.
+	@param current : `T` The current value before the change.
+	@return boolean
+
+	A function that returns a boolean representing whether the new value is
+	different from the current value.
+	
+	Will check for deep equality of tables, so it can be used to determine if
+	the value has changed. Will always return true for unfrozen tables (even if
+	nested), as they can change later.
+]=]
+module.checkChanged = DEFAULT_CHECK_CHANGED_FUNCTION
+
+--[=[
+	@param new : `T` The new value being set.
+	@param current : `T` The current value before the change.
+	@return boolean
+
+	A simple function that returns a boolean representing whether the new value is
+	different from the current value, just using the `~=` operator.
+
+	Use this if you don't have the resources to check for deep equality of tables.
+]=]
+function module.checkChangedSimple<T>(new: T, current: T): boolean
+	return new ~= current
+end
+
+--[=[
 	@param initialValue : `T` The initial value of the ReactiveValue.
-	@param checkValue : `(new: T, current: T, old: T) -> T` A function that is called when the value is set. Must return the new value. Will not be called for the initial value.
+	@param checkValueFn : `(new: T, current: T, old: T) -> T` A function that is called when the value is set. Must return the new value. Will not be called for the initial value.
+	@param checkChangedFn : `(new: T, current: T, old: T) -> boolean` A function that is called to determine if the value has changed. Must return true if the value has changed, false otherwise.
 	@return `ReactiveValue<T>`
 
 	A ReactiveValue is a value that can be observed for changes. When the value changes, the `changed` signal is fired with the new and old values.
 ]=]
-function module.new<T>(initialValue: T, checkValue: ((new: T, current: T, old: T) -> T)?): ReactiveValue<T>
-	local check: CheckValueFunction<T> = checkValue or DEFAULT_CHECK_VALUE_FUNCTION
+function module.new<T>(initialValue: T, checkValueFn: CheckValueFunction<T>?, checkChangedFn: CheckChangedFunction<T>?): ReactiveValue<T>
+	local checkValue: CheckValueFunction<T> = checkValueFn or DEFAULT_CHECK_VALUE_FUNCTION
+	local checkChanged: CheckChangedFunction<T> = checkChangedFn or DEFAULT_CHECK_CHANGED_FUNCTION
 
 	local reactiveValue = {
 		changed = Signal.new() :: Signal.Signal<T, T>,
-		check = check,
+		checkValue = checkValue,
+		checkChanged = checkChanged,
 	}
 	local current: T = initialValue
 	local old: T = initialValue
@@ -132,7 +238,11 @@ function module.new<T>(initialValue: T, checkValue: ((new: T, current: T, old: T
 		end
 		setting = true
 
-		new = check(new, current, old)
+		new = reactiveValue.checkValue(new, current, old)
+		if not reactiveValue.checkChanged(new, current) then
+			setting = false
+			return current
+		end
 		old = current
 		current = new
 
@@ -170,9 +280,12 @@ end
 	Creates a new ReactiveValue dependent on an existing ReactiveValue. The derived value will be updated whenever the source value changes.
 	Derived ReactiveValues are similar to ReactiveValues, but they have a limited set of methods. They can be observed and destroyed, but they cannot be set.
 ]=]
-function module.derive<T, D>(sourceValue: DerivedReactiveValue<T>, derive: (current: T, old: T) -> D): DerivedReactiveValue<D>
+function module.derive<T, D>(sourceValue: DerivedReactiveValue<T>, derive: (current: T, old: T) -> D, checkChangedFn: CheckChangedFunction<D>?): DerivedReactiveValue<D>
+	local checkChanged: CheckChangedFunction<D> = checkChangedFn or DEFAULT_CHECK_CHANGED_FUNCTION
+
 	local derivedReactiveValue = {
 		changed = Signal.new() :: Signal.Signal<D, D>,
+		checkChanged = checkChanged,
 	}
 	local current: D = derive(sourceValue.get())
 	local old: D = current
@@ -180,6 +293,9 @@ function module.derive<T, D>(sourceValue: DerivedReactiveValue<T>, derive: (curr
 	local changedConnection = sourceValue.changed:Connect(function(sourceNew, sourceOld)
 		old = current
 		current = derive(sourceNew, sourceOld)
+		if not derivedReactiveValue.checkChanged(current, old) then
+			return
+		end
 		derivedReactiveValue.changed:Fire(current, old)
 	end)
 
