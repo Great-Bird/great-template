@@ -106,6 +106,7 @@
 	- Breaking:
 		- Renamed the `check` property of ReactiveValue to `checkValue`.
 		- ReactiveValue now uses the `checkValue` property instead of the function passed to the constructor.
+		- ReactiveValue and DerivedReactiveValue are no longer frozen tables.
 	- Added:
 		- checkChanged function that checks for deep equality of tables, and always returns true for frozen tables.
 		- checkChangedSimple function that checks for simple equality using `~=` operator.
@@ -269,7 +270,7 @@ function module.new<T>(initialValue: T, checkValueFn: CheckValueFunction<T>?, ch
 		reactiveValue.changed:Destroy()
 	end
 
-	return table.freeze(reactiveValue)
+	return reactiveValue
 end
 
 --[=[
@@ -317,7 +318,7 @@ function module.derive<T, D>(sourceValue: DerivedReactiveValue<T>, derive: (curr
 		derivedReactiveValue.changed:Destroy()
 	end
 
-	return table.freeze(derivedReactiveValue)
+	return derivedReactiveValue
 end
 
 return module
