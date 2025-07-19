@@ -1,8 +1,8 @@
 --[[
-	ReactiveValue v0.3.0
+	ReactiveValue v0.4.0
 	Author: Great_Bird
 	Date: 2024-09-28
-	Last updated: 2025-07-16
+	Last updated: 2025-07-19
 
 	Note: Requires Signal as a dependency. https://sleitnick.github.io/RbxUtil/api/Signal/
 
@@ -87,21 +87,27 @@
 	value.set("world") -- world
 	```
 
-	You can also derive a new ReactiveValue from an existing one. The derived value will update whenever the source value changes:
+	You can also derive a new ReactiveValue from an existing one.
+	The derived value will update whenever the source value has changed.
 	```lua
-	local sourceValue = ReactiveValue.new(0)
-	local derivedValue = ReactiveValue.derive(sourceValue, function(current, old)
-		return current * 2
+	local value = ReactiveValue.new(0)
+	local derivedValue = ReactiveValue.derive(function(use)
+		-- Note that within the `derive` function, you must use the `use` function to access ReactiveValues.
+		-- Do not call `get()` on ReactiveValues directly, as this will not register dependencies correctly.
+		return use(value) * 2
 	end)
-
 	local connection = derivedValue.changed:Connect(function(new, old)
-		print(`Derived value changed from {old} to {new}`)
+		print("Derived value changed from", old, "to", new)
 	end)
-
-	sourceValue.set(1) -- Derived value changed from 0 to 2
+	value.set(1) -- Derived value changed from 0 to 2
+	value.set(2) -- Derived value changed from 2 to 4
 	```
 
 	Changelog:
+	v0.4.0 (2025-07-19)
+	- Breaking:
+		- Changed ReactiveValue.derive to take a function that registers dependencies with a `use` function.
+			- This allows for dependency tracking and the ability to derive from multiple ReactiveValues.
 	v0.3.0 (2025-07-16)
 	- Breaking:
 		- Renamed the `check` property of ReactiveValue to `checkValue`.
@@ -161,18 +167,10 @@ local DEFAULT_CHECK_CHANGED_FUNCTION: CheckChangedFunction<any> = function(new: 
 	return not equal(new, current)
 end
 
-type CheckValueFunction<T> = (new: T, current: T, old: T) -> T
-type CheckChangedFunction<T> = (new: T, current: T) -> boolean
-export type ReactiveValue<T> = {
-	changed: Signal.Signal<T, T>,
-	checkValue: CheckValueFunction<T>,
-	checkChanged: CheckChangedFunction<T>,
-	set: (new: T) -> T,
-	get: () -> (T, T),
-	getCurrent: () -> T,
-	observe: (callback: (new: T, old: T) -> ()) -> Signal.Connection,
-	destroy: () -> (),
-}
+export type CheckValueFunction<T> = (new: T, current: T, old: T) -> T
+export type CheckChangedFunction<T> = (new: T, current: T) -> boolean
+
+export type Use = <V>(value: ReactiveValue<V>) -> V
 export type DerivedReactiveValue<T> = {
 	changed: Signal.Signal<T, T>,
 	checkChanged: CheckChangedFunction<T>,
@@ -180,6 +178,10 @@ export type DerivedReactiveValue<T> = {
 	getCurrent: () -> T,
 	observe: (callback: (new: T, old: T) -> ()) -> Signal.Connection,
 	destroy: () -> (),
+}
+export type ReactiveValue<T> = DerivedReactiveValue<T> & {
+	checkValue: CheckValueFunction<T>,
+	set: (new: T) -> T,
 }
 
 local module = {}
@@ -220,7 +222,11 @@ end
 
 	A ReactiveValue is a value that can be observed for changes. When the value changes, the `changed` signal is fired with the new and old values.
 ]=]
-function module.new<T>(initialValue: T, checkValueFn: CheckValueFunction<T>?, checkChangedFn: CheckChangedFunction<T>?): ReactiveValue<T>
+function module.new<T>(
+	initialValue: T,
+	checkValueFn: CheckValueFunction<T>?,
+	checkChangedFn: CheckChangedFunction<T>?
+): ReactiveValue<T>
 	local checkValue: CheckValueFunction<T> = checkValueFn or DEFAULT_CHECK_VALUE_FUNCTION
 	local checkChanged: CheckChangedFunction<T> = checkChangedFn or DEFAULT_CHECK_CHANGED_FUNCTION
 
@@ -274,47 +280,99 @@ function module.new<T>(initialValue: T, checkValueFn: CheckValueFunction<T>?, ch
 end
 
 --[=[
-	@param sourceValue : `DerivedReactiveValue<T>` The ReactiveValue to derive from. Can be a ReactiveValue or another derived ReactiveValue.
-	@param derive : `(current: T, old: T) -> D` A function that takes the current value and the old value and returns the derived value.
-	@return `DerivedReactiveValue<D>`
+	@param derive : `(use: Use) -> T` A function that takes a `Use` function and returns the derived value. Must use the `use` function instead of using `get()` on ReactiveValues.
+	@param checkChangedFn : `(new: T, current: T) -> boolean` A function that is called to determine if the value has changed. Must return true if the value has changed, false otherwise.
+	@return `DerivedReactiveValue<T>`
 
-	Creates a new ReactiveValue dependent on an existing ReactiveValue. The derived value will be updated whenever the source value changes.
-	Derived ReactiveValues are similar to ReactiveValues, but they have a limited set of methods. They can be observed and destroyed, but they cannot be set.
+	Creates a new ReactiveValue derived from existing ones. The derived value will be updated whenever the source value(s) change.
+
+	Warning: You must use the `use` function to access ReactiveValues within the `derive` function. Do not call `get()` on ReactiveValues directly, as this will not register dependencies correctly.
 ]=]
-function module.derive<T, D>(sourceValue: DerivedReactiveValue<T>, derive: (current: T, old: T) -> D, checkChangedFn: CheckChangedFunction<D>?): DerivedReactiveValue<D>
-	local checkChanged: CheckChangedFunction<D> = checkChangedFn or DEFAULT_CHECK_CHANGED_FUNCTION
+function module.derive<T>(
+	derive: (use: Use) -> T,
+	checkChangedFn: CheckChangedFunction<T>?
+): DerivedReactiveValue<T>
+	local checkChanged: CheckChangedFunction<T> = checkChangedFn or DEFAULT_CHECK_CHANGED_FUNCTION
+
+	local dependencies: { ReactiveValue<any> } = {}
 
 	local derivedReactiveValue = {
-		changed = Signal.new() :: Signal.Signal<D, D>,
+		changed = Signal.new() :: Signal.Signal<T, T>,
 		checkChanged = checkChanged,
 	}
-	local current: D = derive(sourceValue.get())
-	local old: D = current
-
-	local changedConnection = sourceValue.changed:Connect(function(sourceNew, sourceOld)
-		old = current
-		current = derive(sourceNew, sourceOld)
-		if not derivedReactiveValue.checkChanged(current, old) then
-			return
+	local current: T = derive(function(value: ReactiveValue<any>)
+		if not table.find(dependencies, value) then
+			table.insert(dependencies, value)
 		end
-		derivedReactiveValue.changed:Fire(current, old)
+		return value.getCurrent()
 	end)
+	local old: T = current
+	local pendingCalculate = false
+	local calculating = false
 
-	function derivedReactiveValue.getCurrent(): D
-		return current
+	local function use<V>(value: ReactiveValue<V>): V
+		return value.getCurrent()
 	end
 
-	function derivedReactiveValue.get(): (D, D)
+	local function recalculate()
+		if calculating then
+			error(`Cannot recalculate DerivedReactiveValue while already calculating. This is likely a circular dependency issue.`)
+		end
+		calculating = true
+
+		local new = derive(use)
+		if not checkChanged(new, current) then
+			return
+		end
+		old = current
+		current = new
+		pendingCalculate = false
+		calculating = false
+
+		derivedReactiveValue.changed:Fire(new, old)
+	end
+
+	local function consumeChange()
+		if pendingCalculate then
+			recalculate()
+		end
+	end
+
+	local function registerChange()
+		if not pendingCalculate then
+			task.defer(consumeChange) -- Defer to allow all changes to be registered before recalculating
+		end
+		pendingCalculate = true
+	end
+
+	local changedConnections: { [ReactiveValue<T>]: Signal.Connection } = {}
+	for _, dependency in dependencies do
+		changedConnections[dependency] = dependency.changed:Connect(registerChange)
+	end
+
+	local function get()
+		if pendingCalculate then
+			recalculate()
+		end
 		return current, old
 	end
 
-	function derivedReactiveValue.observe(callback: (new: D, old: D) -> ()): Signal.Connection
-		callback(current, old)
+	function derivedReactiveValue.getCurrent(): T
+		return (get())
+	end
+
+	derivedReactiveValue.get = get
+
+	function derivedReactiveValue.observe(callback: (new: T, old: T) -> ()): Signal.Connection
+		callback(get())
 		return derivedReactiveValue.changed:Connect(callback)
 	end
 
 	function derivedReactiveValue.destroy()
-		changedConnection:Disconnect()
+		for _, connection in changedConnections do
+			connection:Disconnect()
+		end
+		table.clear(changedConnections)
 		derivedReactiveValue.changed:Destroy()
 	end
 
