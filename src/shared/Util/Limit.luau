@@ -8,7 +8,7 @@ local Module = {}
 	stores uses within the last interval.
 ]=]
 function Module.rate(maxRate: number, interval: number?)
-	local interval = interval or 1
+	interval = interval or 1
 	assert(maxRate > 0 and maxRate % 1 == 0, "maxRate must be an integer greater than 0")
 	assert(interval > 0, "interval must be greater than 0")
 
