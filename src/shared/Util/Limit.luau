@@ -1,14 +1,14 @@
 --!strict
 
-local Limit = {}
+local Module = {}
 
 --[=[
-	Returns a function that returns true if it has been called more than
-	`maxRate` times per `interval` seconds, and a table which stores uses within
-	the last interval.
+	Returns a function that returns true if it has been called with the passed
+	key more than `maxRate` times per `interval` seconds, and a table which
+	stores uses within the last interval.
 ]=]
-function Limit.rate(maxRate: number, interval: number?)
-	interval = interval or 1
+function Module.rate(maxRate: number, interval: number?)
+	local interval = interval or 1
 	assert(maxRate > 0 and maxRate % 1 == 0, "maxRate must be an integer greater than 0")
 	assert(interval > 0, "interval must be greater than 0")
 
@@ -33,12 +33,12 @@ function Limit.rate(maxRate: number, interval: number?)
 end
 
 --[=[
-	Returns a function that returns nil if it has not been called in the past
-	`debounceTime` seconds, else a number representing the amount of time in
-	seconds before the debounce for the key is over. Also returns a table
-	storing the debounce state.
+	Returns a function that returns nil if it has not been called with the
+	passed key in the past `debounceTime` seconds, else a number representing
+	the amount of time in seconds before the debounce for the key is over. Also
+	returns a table storing the debounce state.
 ]=]
-function Limit.debounce()
+function Module.debounce()
 	local debounceState: { [any]: { timestamp: number, thread: thread }? } = {}
 
 	local function onDebounce(key: any, debounceTime: number): number?
@@ -68,4 +68,4 @@ function Limit.debounce()
 	return onDebounce, debounceState
 end
 
-return Limit
+return Module
