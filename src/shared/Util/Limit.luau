@@ -1,21 +1,44 @@
 --!strict
 
-export type Debounce<T> = {
-	timeLeft: (key: T, debounceTime: number) -> number?,
+export type Throttle<T> = {
+	invoke: (key: T, throttleTime: number) -> number?,
+	getTimeLeft: (key: T, throttleTime: number) -> number,
 	state: { [T]: { timestamp: number, thread: thread }? }
 }
 export type Rate<T> = {
-	exceeded: (key: T) -> boolean,
+	invoke: (key: T) -> boolean,
+	isExceeded: (key: T) -> boolean,
 	uses: { [T]: number }
 }
 
 local Module = {}
 
 --[=[
-	Returns an object with an `exceeded` function that returns true if it has
-	been called with the passed key more than `maxRate` times per `interval`
-	seconds.
-	The `uses` table in the object stores uses within the last interval.
+	Returns an object that represents a rate limiter.
+	
+	The `invoke` function returns true if it has been called with the passed key
+	more than `maxRate` times per `interval` seconds.
+	```lua
+	local rateLimit = Limit.rateLimit(5, 2) :: Limit.Rate<Player>
+	
+	local function sendMessage(player: Player)
+		-- Only allow this function to run 5 times every 2 seconds
+		if rateLimit.invoke(player) then
+			return
+		end
+		print(player.Name)
+	end
+
+	-- This will only print the local player 5 times every 2 seconds
+	while task.wait() do
+		sendMessage(game:GetService("Players").LocalPlayer)
+	end
+	```
+	
+	The `isExceeded` function returns whether the key has hit the rate limit
+	without invoking the limit.
+	
+	The `uses` table stores uses within the last interval.
 ]=]
 function Module.rate<T>(maxRate: number, interval: number?): Rate<T>
 	interval = interval or 1
@@ -23,8 +46,12 @@ function Module.rate<T>(maxRate: number, interval: number?): Rate<T>
 	assert(interval > 0, "interval must be greater than 0")
 
 	local uses: { [T]: number } = {}
-
-	local function exceeded(key: T)
+	
+	local function isExceeded(key: T): boolean
+		return uses[key] and uses[key] >= maxRate
+	end
+	
+	local function invoke(key: T): boolean
 		if not uses[key] then
 			uses[key] = 0
 			task.delay(interval, function()
@@ -38,44 +65,71 @@ function Module.rate<T>(maxRate: number, interval: number?): Rate<T>
 			return false
 		end
 	end
-	
-	return { exceeded = exceeded, uses = uses }
+
+	return { invoke = invoke, isExceeded = isExceeded, uses = uses }
 end
 
 --[=[
-	Returns an object with a `timeLeft` function that returns 0 if it has not
-	been called with the passed key in the past `debounceTime` seconds, else the
-	number of seconds before the debounce for the key is over.
-	The `state` table in the object stores the debounce state.
-]=]
-function Module.debounce<T>(): Debounce<T>
-	local debounceState: { [T]: { timestamp: number, thread: thread }? } = {}
+	Returns an object that represents a leading-edge throttle.
+	
+	The `invoke` function returns nil if it has not been called with the passed
+	key in the past `throttleTime` seconds, else it returns the number of
+	seconds left until the throttle ends.
+	```lua
+	local throttle = Limit.throttle() :: Limit.Throttle<Player>
+	
+	local function sendMessage(player: Player)
+		-- Only allow this function to run once per second
+		if throttle.invoke(player, 1) then
+			return
+		end
+		print(player.Name)
+	end
 
-	local function timeLeft(key: T, debounceTime: number): number
-		local entry = debounceState[key]
+	-- This will only print the local player once every second
+	while task.wait() do
+		sendMessage(game:GetService("Players").LocalPlayer)
+	end
+	```
+
+	The `getTimeLeft` function returns how much longer the passed key will be
+	throttled for without invoking the throttle.
+
+	The `state` table stores the throttle state.
+]=]
+function Module.throttle<T>(): Throttle<T>
+	local throttleState: { [T]: { timestamp: number, thread: thread }? } = {}
+	
+	local function getTimeLeft(key: T, throttleTime: number): number
+		local entry = throttleState[key]
+		return if entry then throttleTime - (os.clock() - entry.timestamp) else 0
+	end
+	
+	local function invoke(key: T, throttleTime: number): number?
+		local entry = throttleState[key]
 		if not entry then
-			debounceState[key] = {
+			throttleState[key] = {
 				timestamp = os.clock(),
-				thread = task.delay(debounceTime, function()
-					debounceState[key] = nil
+				thread = task.delay(throttleTime, function()
+					throttleState[key] = nil
 				end)
 			}
 		else
 			local now = os.clock()
 			local timePassed = now - entry.timestamp
-			if timePassed < debounceTime then
-				return debounceTime - timePassed
+			if timePassed < throttleTime then
+				return throttleTime - timePassed
 			end
 			task.cancel(entry.thread)
 			entry.timestamp = now
-			entry.thread = task.delay(debounceTime, function()
-				debounceState[key] = nil
+			entry.thread = task.delay(throttleTime, function()
+				throttleState[key] = nil
 			end)
 		end
-		return 0
+		return nil
 	end
 
-	return { timeLeft = timeLeft, state = debounceState }
+	return { invoke = invoke, getTimeLeft = getTimeLeft, state = throttleState }
 end
 
 return Module
